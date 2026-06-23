@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import AlertBanner from '../../components/common/AlertBanner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../hooks/useAuth';
@@ -10,11 +11,21 @@ import { setLoginPortal } from '../../utils/storage';
 
 export default function PatientLoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, login, logout, isAuthenticated, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [registrationAlert, setRegistrationAlert] = useState(
+    () => location.state?.registrationSuccess ?? false
+  );
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.registrationSuccess) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state?.registrationSuccess, navigate]);
 
   // Clear corrupt sessions (authenticated but no valid role)
   useEffect(() => {
@@ -80,6 +91,18 @@ export default function PatientLoginPage() {
           <p className="mt-1 text-sm text-slate-500">Use your patient account to access the dashboard.</p>
           <div className="mt-6 space-y-4">
             <ErrorMessage message={error} />
+            {registrationAlert && (
+              <AlertBanner
+                variant="success"
+                message={
+                  <>
+                    <span className="block font-semibold">Account Created Successfully</span>
+                    <span className="mt-1 block">Please sign in using your email and password.</span>
+                  </>
+                }
+                onDismiss={() => setRegistrationAlert(false)}
+              />
+            )}
             <label className="label">
               Email
               <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />

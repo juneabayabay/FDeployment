@@ -22,7 +22,7 @@ export default function AlertBanner({ message, variant = 'success', onDismiss })
       role="status"
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" />
-      <p className="flex-1">{message}</p>
+      <div className="flex-1">{message}</div>
       {onDismiss && (
         <button
           type="button"

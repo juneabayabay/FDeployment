@@ -1,10 +1,22 @@
 import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
-import ErrorMessage from '../../components/common/ErrorMessage';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import PasswordInput from '../../components/common/PasswordInput';
+import Toast from '../../components/common/Toast';
 import { useAuth } from '../../hooks/useAuth';
 import { parseApiError } from '../../utils/formatters';
 
+const REDIRECT_DELAY_MS = 3000;
+
+function formatLabel(field) {
+  return field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function clearPasswords(prev) {
+  return { ...prev, password: '', password_confirm: '' };
+}
+
 export default function RegisterPage() {
+  const navigate = useNavigate();
   const { register, isAuthenticated } = useAuth();
   const [form, setForm] = useState({
     email: '',
@@ -13,8 +25,9 @@ export default function RegisterPage() {
     password: '',
     password_confirm: '',
   });
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successToast, setSuccessToast] = useState(null);
+  const [errorToast, setErrorToast] = useState(null);
 
   if (isAuthenticated) return <Navigate to="/" replace />;
 
@@ -24,46 +37,126 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setMessage('');
+    setErrorToast(null);
+    setSuccessToast(null);
+
+    if (form.password !== form.password_confirm) {
+      setErrorToast({
+        title: 'Registration Failed',
+        message: 'Passwords do not match. Please try again.',
+      });
+      setForm(clearPasswords);
+      return;
+    }
+
+    setLoading(true);
     try {
       await register(form);
-      setMessage('Registration successful. Please log in.');
+
+      setSuccessToast({
+        title: 'Registration Successful',
+        message:
+          'Your patient account has been created successfully. Redirecting you to the login page...',
+      });
+
+      setTimeout(() => {
+        navigate('/login', {
+          replace: true,
+          state: { registrationSuccess: true },
+        });
+      }, REDIRECT_DELAY_MS);
     } catch (err) {
-      setError(parseApiError(err));
+      setErrorToast({
+        title: 'Registration Failed',
+        message: parseApiError(err),
+      });
+      setForm(clearPasswords);
+      setLoading(false);
     }
   };
 
+  const submitDisabled = loading || !!successToast;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-sky-100 p-4">
-      <form className="card w-full max-w-md" onSubmit={handleSubmit}>
-        <h1 className="text-2xl font-bold text-slate-900">Patient Registration</h1>
-        <p className="mt-1 text-sm text-slate-500">Create your account to book appointments online.</p>
-        <div className="mt-6 space-y-4">
-          <ErrorMessage message={error} />
-          {message && <div className="alert-success">{message}</div>}
-          {['first_name', 'last_name', 'email', 'password', 'password_confirm'].map((field) => (
-            <label key={field} className="label">
-              {field.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-              <input
-                className="input"
-                name={field}
-                type={field.includes('password') ? 'password' : field === 'email' ? 'email' : 'text'}
-                value={form[field]}
+    <>
+      {successToast && (
+        <Toast
+          variant="success"
+          title={successToast.title}
+          message={successToast.message}
+          onDismiss={() => setSuccessToast(null)}
+        />
+      )}
+      {errorToast && (
+        <Toast
+          variant="error"
+          title={errorToast.title}
+          message={errorToast.message}
+          onDismiss={() => setErrorToast(null)}
+        />
+      )}
+
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-sky-100 p-4">
+        <form className="card w-full max-w-md" onSubmit={handleSubmit}>
+          <h1 className="text-2xl font-bold text-slate-900">Patient Registration</h1>
+          <p className="mt-1 text-sm text-slate-500">Create your account to book appointments online.</p>
+          <div className="mt-6 space-y-4">
+            {['first_name', 'last_name', 'email'].map((field) => (
+              <label key={field} className="label">
+                {formatLabel(field)}
+                <input
+                  className="input"
+                  name={field}
+                  type={field === 'email' ? 'email' : 'text'}
+                  value={form[field]}
+                  onChange={handleChange}
+                  required
+                  autoComplete={field === 'email' ? 'email' : field}
+                  disabled={submitDisabled}
+                />
+              </label>
+            ))}
+
+            <label className="label">
+              Password
+              <PasswordInput
+                name="password"
+                value={form.password}
                 onChange={handleChange}
-                required
+                autoComplete="new-password"
+                disabled={submitDisabled}
               />
             </label>
-          ))}
-          <button type="submit" className="btn-primary w-full">Register</button>
-          <p className="text-center text-sm">
-            Already have an account? <Link to="/" className="text-sky-600">Patient login</Link>
-          </p>
-          <p className="text-center text-sm">
-            <Link to="/" className="text-slate-500">← Back to portal selection</Link>
-          </p>
-        </div>
-      </form>
-    </div>
+
+            <label className="label">
+              Confirm Password
+              <PasswordInput
+                name="password_confirm"
+                value={form.password_confirm}
+                onChange={handleChange}
+                autoComplete="new-password"
+                disabled={submitDisabled}
+              />
+            </label>
+
+            <button type="submit" className="btn-primary w-full gap-2" disabled={submitDisabled}>
+              {loading && (
+                <span
+                  className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                  aria-hidden
+                />
+              )}
+              {loading ? 'Creating Account...' : 'Register'}
+            </button>
+            <p className="text-center text-sm">
+              Already have an account? <Link to="/login" className="text-sky-600">Patient login</Link>
+            </p>
+            <p className="text-center text-sm">
+              <Link to="/" className="text-slate-500">← Back to portal selection</Link>
+            </p>
+          </div>
+        </form>
+      </div>
+    </>
   );
 }
