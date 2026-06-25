@@ -1,0 +1,349 @@
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from rest_framework import generics, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from .models import ClinicPermission, Role, RolePermission, User, UserRole
+from .permissions import HasClinicPermission
+from .serializers import (
+    ChangePasswordSerializer,
+    ClinicPermissionSerializer,
+    CustomTokenObtainPairSerializer,
+    ForgotPasswordSerializer,
+    PublicRegisterSerializer,
+    ResetPasswordSerializer,
+    RolePermissionSerializer,
+    RoleSerializer,
+    UserCreateSerializer,
+    UserRoleSerializer,
+    UserSerializer,
+    UserUpdateSerializer,
+)
+from .email_templates import build_password_reset_email
+from .throttles import AuthAnonRateThrottle
+from .email_utils import is_smtp_ready, send_password_reset_email, smtp_setup_hint
+from .utils import blacklist_user_tokens
+
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.filter(deleted_at__isnull=True)
+    serializer_class = PublicRegisterSerializer
+    permission_classes = [AllowAny]
+    throttle_classes = [AuthAnonRateThrottle]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
+    permission_classes = [AllowAny]
+    throttle_classes = [AuthAnonRateThrottle]
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    permission_classes = [AllowAny]
+    throttle_classes = [AuthAnonRateThrottle]
+
+
+class LogoutView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [AuthAnonRateThrottle]
+
+    def post(self, request):
+        refresh_token = request.data.get("refresh")
+        if not refresh_token:
+            return Response(
+                {"detail": "Refresh token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            RefreshToken(refresh_token).blacklist()
+        except TokenError:
+            return Response(
+                {"detail": "Invalid or expired refresh token."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CurrentUserView(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.request.method in ("PUT", "PATCH"):
+            return UserUpdateSerializer
+        return UserSerializer
+
+    def get_object(self):
+        return self.request.user
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(
+            data=request.data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+
+        request.user.set_password(serializer.validated_data["new_password"])
+        request.user.save(update_fields=["password"])
+        blacklist_user_tokens(request.user)
+
+        return Response({"detail": "Password updated successfully."})
+
+
+class ForgotPasswordView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [AuthAnonRateThrottle]
+
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"]
+
+        response_data = {
+            "detail": (
+                "If an account exists with that email, a confirmation message has been sent to your inbox. "
+                "Open Gmail and click the link only if you requested a password reset."
+            ),
+        }
+
+        try:
+            user = User.objects.get(email=email, deleted_at__isnull=True, is_active=True)
+        except User.DoesNotExist:
+            return Response(response_data)
+
+        if not is_smtp_ready():
+            detail = (
+                smtp_setup_hint()
+                if settings.DEBUG
+                else (
+                    "Unable to send confirmation email right now. "
+                    "Please contact the clinic administrator."
+                )
+            )
+            return Response({"detail": detail}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        reset_link = f"{frontend_url}/reset-password?uid={uid}&token={token}"
+
+        subject, text_body, html_body = build_password_reset_email(
+            recipient_email=user.email,
+            recipient_name=user.full_name or user.get_full_name() or user.first_name,
+            reset_link=reset_link,
+        )
+
+        sent, _error = send_password_reset_email(
+            subject=subject,
+            text_body=text_body,
+            html_body=html_body,
+            recipient=user.email,
+        )
+
+        if not sent:
+            return Response(
+                {
+                    "detail": (
+                        "Unable to send confirmation email right now. "
+                        "Please try again later or contact the clinic."
+                    ),
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response(response_data)
+
+
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [AuthAnonRateThrottle]
+
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            uid = force_str(urlsafe_base64_decode(serializer.validated_data["uid"]))
+            user = User.objects.get(pk=uid, deleted_at__isnull=True, is_active=True)
+        except (User.DoesNotExist, ValueError, TypeError, OverflowError):
+            return Response(
+                {"detail": "Invalid reset link."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        token = serializer.validated_data["token"]
+        if not default_token_generator.check_token(user, token):
+            return Response(
+                {"detail": "Invalid or expired reset link."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(serializer.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        blacklist_user_tokens(user)
+
+        return Response({"detail": "Password reset successful. You can now log in."})
+
+
+class TestEmailView(APIView):
+    """DEBUG-only SMTP test for admins. POST { \"email\": \"optional@recipient.com\" }"""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if not settings.DEBUG:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if not request.user.is_superuser:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        if not is_smtp_ready():
+            return Response({"detail": smtp_setup_hint()}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        from .email_utils import send_clinic_email
+
+        recipient = request.data.get("email") or settings.EMAIL_HOST_USER
+        sent, error = send_clinic_email(
+            subject="Barnabas Dental — SMTP test",
+            text_body="If you receive this in Gmail, SMTP is configured correctly.",
+            recipient=recipient,
+        )
+        if not sent:
+            return Response(
+                {"detail": error or "Unable to send test email."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        return Response({"detail": f"Test email sent to {recipient}."})
+
+
+class RoleViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Role.objects.prefetch_related(
+        "role_permissions__permission"
+    ).order_by("name")
+    serializer_class = RoleSerializer
+    permission_classes = [HasClinicPermission]
+    required_permissions = ["roles.view"]
+
+
+class ClinicPermissionViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ClinicPermission.objects.all().order_by("module", "action")
+    serializer_class = ClinicPermissionSerializer
+    permission_classes = [HasClinicPermission]
+    required_permissions = ["permissions.view"]
+
+
+class RolePermissionViewSet(viewsets.ModelViewSet):
+    queryset = RolePermission.objects.select_related(
+        "role", "permission"
+    ).order_by("role__name", "permission__codename")
+    serializer_class = RolePermissionSerializer
+    permission_classes = [HasClinicPermission]
+    required_permissions = ["permissions.manage"]
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = (
+        User.objects.filter(deleted_at__isnull=True)
+        .prefetch_related("user_roles__role")
+        .order_by("-created_at")
+    )
+    permission_classes = [HasClinicPermission]
+    permission_map = {
+        "list": ["users.view"],
+        "retrieve": ["users.view"],
+        "create": ["users.create"],
+        "update": ["users.update"],
+        "partial_update": ["users.update"],
+        "destroy": ["users.delete"],
+        "reset_password": ["users.update"],
+    }
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return UserCreateSerializer
+        if self.action in ("update", "partial_update"):
+            return UserUpdateSerializer
+        return UserSerializer
+
+    def perform_destroy(self, instance):
+        instance.soft_delete()
+        blacklist_user_tokens(instance)
+
+    @action(detail=True, methods=["post"], url_path="reset-password")
+    def reset_password(self, request, pk=None):
+        user = self.get_object()
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        reset_link = f"{frontend_url}/reset-password?uid={uid}&token={token}"
+
+        subject, text_body, html_body = build_password_reset_email(
+            recipient_email=user.email,
+            recipient_name=user.full_name or user.get_full_name() or user.first_name,
+            reset_link=reset_link,
+            initiated_by_admin=True,
+        )
+
+        sent, _error = send_password_reset_email(
+            subject=subject,
+            text_body=text_body,
+            html_body=html_body,
+            recipient=user.email,
+        )
+
+        from audit.services import client_ip, log_audit
+        from audit.models import AuditLog
+
+        log_audit(
+            actor=request.user,
+            action=AuditLog.Action.UPDATE,
+            module="users",
+            resource_type="user",
+            resource_id=user.pk,
+            summary=f"Password reset initiated for {user.email}",
+            ip_address=client_ip(request),
+        )
+
+        if not sent:
+            return Response(
+                {"detail": "Unable to send confirmation email. Try again later."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response({"detail": "Password reset confirmation email sent."})
+
+
+class UserRoleViewSet(viewsets.ModelViewSet):
+    queryset = UserRole.objects.select_related("user", "role", "assigned_by").order_by(
+        "-assigned_at"
+    )
+    serializer_class = UserRoleSerializer
+    permission_classes = [HasClinicPermission]
+    permission_map = {
+        "list": ["user_roles.view"],
+        "retrieve": ["user_roles.view"],
+        "create": ["user_roles.manage"],
+        "update": ["user_roles.manage"],
+        "partial_update": ["user_roles.manage"],
+        "destroy": ["user_roles.manage"],
+    }
+
+    def perform_create(self, serializer):
+        serializer.save(assigned_by=self.request.user)

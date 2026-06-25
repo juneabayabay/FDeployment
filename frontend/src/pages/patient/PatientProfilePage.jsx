@@ -1,0 +1,116 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import PageHeader from '../../components/common/PageHeader';
+import AlertBanner from '../../components/common/AlertBanner';
+import ErrorMessage from '../../components/common/ErrorMessage';
+import { ProfileSkeleton } from '../../components/patient/PatientSkeletons';
+import { authService } from '../../services';
+import { useAuth } from '../../hooks/useAuth';
+import { parseApiError } from '../../utils/formatters';
+
+function ProfileDetailsForm({ user, refreshUser, onMessage, onError }) {
+  const [form, setForm] = useState({
+    first_name: user.first_name || '',
+    last_name: user.last_name || '',
+    phone: user.phone || '',
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    onError('');
+    onMessage('');
+    try {
+      await authService.updateMe(form);
+      await refreshUser();
+      onMessage('Profile updated.');
+    } catch (err) {
+      onError(parseApiError(err));
+    }
+  };
+
+  return (
+    <form className="card space-y-4" onSubmit={handleSubmit}>
+      <h3 className="font-semibold text-slate-900">Personal info</h3>
+      {['first_name', 'last_name', 'phone'].map((field) => (
+        <label key={field} className="label">
+          {field.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+          <input
+            className="input"
+            value={form[field]}
+            onChange={(e) => setForm((p) => ({ ...p, [field]: e.target.value }))}
+            required={field !== 'phone'}
+          />
+        </label>
+      ))}
+      <p className="text-sm text-slate-500">Email: {user.email}</p>
+      <button type="submit" className="btn-primary">Save profile</button>
+    </form>
+  );
+}
+
+export default function PatientProfilePage() {
+  const { user, refreshUser, changePassword } = useAuth();
+
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: '',
+    new_password: '',
+    new_password_confirm: '',
+  });
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setMessage('');
+    try {
+      await changePassword(passwordForm);
+      setMessage('Password changed. Please log in again.');
+      setPasswordForm({ current_password: '', new_password: '', new_password_confirm: '' });
+    } catch (err) {
+      setError(parseApiError(err));
+    }
+  };
+
+  if (!user) {
+    return <ProfileSkeleton />;
+  }
+
+  return (
+    <div className="mx-auto max-w-lg space-y-6">
+      <PageHeader title="Profile" subtitle="Manage your account and password" />
+
+      {message && <AlertBanner message={message} onDismiss={() => setMessage('')} />}
+      <ErrorMessage message={error} />
+
+      <ProfileDetailsForm
+          key={user.id}
+          user={user}
+          refreshUser={refreshUser}
+          onMessage={setMessage}
+          onError={setError}
+      />
+
+      <form className="card space-y-4" onSubmit={handlePasswordSubmit}>
+        <h3 className="font-semibold text-slate-900">Change password</h3>
+        {['current_password', 'new_password', 'new_password_confirm'].map((field) => (
+          <label key={field} className="label">
+            {field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+            <input
+              className="input"
+              type="password"
+              value={passwordForm[field]}
+              onChange={(e) => setPasswordForm((p) => ({ ...p, [field]: e.target.value }))}
+              required
+            />
+          </label>
+        ))}
+        <button type="submit" className="btn-secondary">Change password</button>
+      </form>
+
+      <p className="text-sm">
+        <Link to="/patient/dashboard" className="text-sky-600">← Back to dashboard</Link>
+      </p>
+    </div>
+  );
+}

@@ -1,0 +1,12 @@
+# Production dependencies for Render (PostgreSQL only, no native MySQL/Celery bloat).
+# Local dev can keep using requirements.txt with the full lockfile.
+
+Django==6.0.3
+djangorestframework==3.17.1
+djangorestframework_simplejwt==5.5.1
+django-cors-headers==4.9.0
+dj-database-url==3.0.1
+psycopg2-binary==2.9.11
+python-dotenv==1.1.0
+gunicorn==23.0.0
+whitenoise==6.12.0

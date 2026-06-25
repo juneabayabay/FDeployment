@@ -1,17 +1,31 @@
 # Environment variables and secrets
 .env
 .env.*
+<<<<<<< HEAD
 *.env
 frontend/.env
 backend/.env
 barnabas-dental-system/frontend/.env
 barnabas-dental-system/backend/.env
+=======
+!.env.example
+!**/.env.example
+!**/.env.production.example
+*.env
+frontend/.env
+backend/.env
+>>>>>>> 0d468ae10d5bff9d74135265117d7573ad140cf1
 
 # Node.js
 node_modules/
 dist/
+<<<<<<< HEAD
 barnabas-dental-system/frontend/node_modules/
 barnabas-dental-system/frontend/dist/
+=======
+frontend/node_modules/
+frontend/dist/
+>>>>>>> 0d468ae10d5bff9d74135265117d7573ad140cf1
 
 # Python
 __pycache__/
@@ -48,12 +62,21 @@ db.sqlite3
 db.sqlite3-journal
 staticfiles/
 media/
+<<<<<<< HEAD
 barnabas-dental-system/backend/staticfiles/
 barnabas-dental-system/backend/media/
 
 # Vite / frontend build artifacts
 .vite/
 barnabas-dental-system/frontend/.vite/
+=======
+backend/staticfiles/
+backend/media/
+
+# Vite / frontend build artifacts
+.vite/
+frontend/.vite/
+>>>>>>> 0d468ae10d5bff9d74135265117d7573ad140cf1
 
 # OS-generated files
 .DS_Store

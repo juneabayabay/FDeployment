@@ -1,0 +1,426 @@
+.patient-auth-page {
+  --patient-teal-dark: #0f3b3a;
+  --patient-teal-mid: #1a5f5d;
+  --patient-teal: #2ca6a4;
+  --patient-teal-light: #5dcfcc;
+  --patient-text: #0f2c2b;
+  --patient-muted: #4a6470;
+
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 1.5rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: linear-gradient(
+    145deg,
+    var(--patient-teal-dark) 0%,
+    var(--patient-teal-mid) 40%,
+    var(--patient-teal) 75%,
+    var(--patient-teal-light) 100%
+  );
+}
+
+.patient-auth-bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.patient-auth-bubble-1 {
+  width: 320px;
+  height: 320px;
+  top: -80px;
+  left: -60px;
+  animation: floatBubble 18s ease-in-out infinite;
+}
+
+.patient-auth-bubble-2 {
+  width: 200px;
+  height: 200px;
+  top: 20%;
+  right: -40px;
+  animation: floatBubble 14s ease-in-out infinite reverse;
+}
+
+.patient-auth-bubble-3 {
+  width: 140px;
+  height: 140px;
+  bottom: 15%;
+  left: 8%;
+  animation: floatBubble 12s ease-in-out infinite 2s;
+}
+
+.patient-auth-bubble-4 {
+  width: 260px;
+  height: 260px;
+  bottom: -90px;
+  right: 10%;
+  animation: floatBubble 20s ease-in-out infinite 1s;
+}
+
+.patient-auth-bubble-5 {
+  width: 90px;
+  height: 90px;
+  top: 45%;
+  left: 42%;
+  animation: floatBubble 10s ease-in-out infinite 3s;
+}
+
+.patient-auth-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.patient-auth-particle {
+  position: absolute;
+  bottom: -10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  animation: particleRise linear infinite;
+}
+
+.patient-auth-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+  padding: 2.5rem 2.25rem;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 48px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+  animation: cardEntry 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.patient-auth-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.patient-auth-brand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, var(--patient-teal-mid), var(--patient-teal));
+  color: white;
+  font-size: 1.5rem;
+  box-shadow: 0 8px 24px rgba(44, 166, 164, 0.4);
+}
+
+.patient-auth-brand-name {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--patient-text);
+}
+
+.patient-auth-brand-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--patient-teal);
+}
+
+.patient-auth-title {
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--patient-text);
+  text-align: center;
+}
+
+.patient-auth-subhead {
+  margin-top: 0.5rem;
+  margin-bottom: 1.75rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--patient-muted);
+  text-align: center;
+}
+
+.patient-auth-field {
+  margin-bottom: 1.1rem;
+}
+
+.patient-auth-label {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--patient-muted);
+}
+
+.patient-auth-input-wrap {
+  position: relative;
+}
+
+.patient-auth-input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--patient-teal);
+  font-size: 0.95rem;
+  pointer-events: none;
+}
+
+.patient-auth-input {
+  width: 100%;
+  padding: 0.85rem 1rem 0.85rem 2.75rem;
+  font-size: 0.95rem;
+  color: var(--patient-text);
+  background: rgba(255, 255, 255, 0.75);
+  border: 1.5px solid rgba(44, 166, 164, 0.25);
+  border-radius: 16px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.patient-auth-input:focus {
+  border-color: var(--patient-teal);
+  box-shadow: 0 0 0 3px rgba(44, 166, 164, 0.18);
+}
+
+.patient-auth-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.patient-auth-input--password {
+  padding-right: 2.75rem;
+}
+
+.patient-auth-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.25rem;
+  color: var(--patient-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.patient-auth-toggle:hover:not(:disabled) {
+  color: var(--patient-teal);
+}
+
+.patient-auth-toggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.patient-auth-forgot {
+  margin-bottom: 1.25rem;
+  text-align: right;
+}
+
+.patient-auth-forgot a {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--patient-teal);
+  text-decoration: none;
+}
+
+.patient-auth-forgot a:hover {
+  color: var(--patient-teal-mid);
+  text-decoration: underline;
+}
+
+.patient-auth-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.95rem 1.5rem;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--patient-teal-mid), var(--patient-teal));
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 8px 28px rgba(44, 166, 164, 0.45);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.patient-auth-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(44, 166, 164, 0.5);
+}
+
+.patient-auth-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.patient-auth-btn-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.patient-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--patient-muted);
+}
+
+.patient-auth-divider::before,
+.patient-auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(44, 166, 164, 0.2);
+}
+
+.patient-auth-switch {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--patient-muted);
+}
+
+.patient-auth-switch a {
+  font-weight: 600;
+  color: var(--patient-teal);
+  text-decoration: none;
+}
+
+.patient-auth-switch a:hover {
+  text-decoration: underline;
+}
+
+.patient-auth-back {
+  display: block;
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--patient-muted);
+  text-decoration: none;
+}
+
+.patient-auth-back:hover {
+  color: var(--patient-teal);
+}
+
+.patient-auth-alert {
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  border-radius: 16px;
+}
+
+.patient-auth-alert--error {
+  color: #991b1b;
+  background: rgba(254, 226, 226, 0.9);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+.patient-auth-alert--success {
+  color: #065f46;
+  background: rgba(209, 250, 229, 0.9);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+}
+
+@keyframes floatBubble {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(20px, -25px) scale(1.05);
+  }
+  66% {
+    transform: translate(-15px, 15px) scale(0.95);
+  }
+}
+
+@keyframes particleRise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-110vh);
+    opacity: 0;
+  }
+}
+
+@keyframes cardEntry {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 560px) {
+  .patient-auth-card {
+    padding: 2rem 1.5rem;
+    border-radius: 36px;
+  }
+
+  .patient-auth-title {
+    font-size: 1.45rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .patient-auth-page {
+    padding: 1rem;
+  }
+
+  .patient-auth-card {
+    padding: 1.75rem 1.25rem;
+    border-radius: 28px;
+  }
+}

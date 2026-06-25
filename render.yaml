@@ -1,0 +1,131 @@
+# Render Blueprint — Barnabas Dental API
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Set secret env vars in the Render dashboard (sync: false entries):
+#   ALLOWED_HOSTS, DATABASE_URL, CORS_ALLOWED_ORIGINS, FRONTEND_URL, SMTP vars
+
+services:
+  - type: web
+    name: barnabas-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements-prod.txt && python manage.py collectstatic --noinput
+    startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    preDeployCommand: python manage.py migrate --noinput
+    healthCheckPath: /admin/login/
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: DEBUG
+        value: "False"
+      - key: DB_SSL_REQUIRE
+        value: "True"
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+
+  - type: cron
+    name: barnabas-expire-pencil
+    runtime: python
+    rootDir: backend
+    schedule: "*/15 * * * *"
+    buildCommand: pip install -r requirements-prod.txt
+    startCommand: python manage.py expire_pencil_bookings
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: DEBUG
+        value: "False"
+      - key: DB_SSL_REQUIRE
+        value: "True"
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+
+  - type: cron
+    name: barnabas-appointment-reminders
+    runtime: python
+    rootDir: backend
+    schedule: "0 9 * * *"
+    buildCommand: pip install -r requirements-prod.txt
+    startCommand: python manage.py send_appointment_reminders
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: DEBUG
+        value: "False"
+      - key: DB_SSL_REQUIRE
+        value: "True"
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+
+  - type: cron
+    name: barnabas-follow-up-reminders
+    runtime: python
+    rootDir: backend
+    schedule: "0 10 * * *"
+    buildCommand: pip install -r requirements-prod.txt
+    startCommand: python manage.py send_follow_up_reminders
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: DEBUG
+        value: "False"
+      - key: DB_SSL_REQUIRE
+        value: "True"
+      - key: EMAIL_BACKEND
+        value: django.core.mail.backends.smtp.EmailBackend
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
