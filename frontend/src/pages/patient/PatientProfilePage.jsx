@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import PageHeader from '../../components/common/PageHeader';
 import AlertBanner from '../../components/common/AlertBanner';
 import ErrorMessage from '../../components/common/ErrorMessage';
+import AvatarUploadSection from '../../components/profile/AvatarUploadSection';
 import { ProfileSkeleton } from '../../components/patient/PatientSkeletons';
 import { authService } from '../../services';
 import { useAuth } from '../../hooks/useAuth';
@@ -82,6 +83,13 @@ export default function PatientProfilePage() {
 
       {message && <AlertBanner message={message} onDismiss={() => setMessage('')} />}
       <ErrorMessage message={error} />
+
+      <AvatarUploadSection
+        user={user}
+        onUpdated={refreshUser}
+        onMessage={setMessage}
+        onError={setError}
+      />
 
       <ProfileDetailsForm
           key={user.id}

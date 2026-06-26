@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import ErrorMessage from '../../components/common/ErrorMessage';
+import AvatarUploadSection from '../../components/profile/AvatarUploadSection';
+import DentistProfileForm from '../../components/profile/DentistProfileForm';
 import { authService } from '../../services';
 import { useAuth } from '../../hooks/useAuth';
+import { ROLES } from '../../utils/constants';
 import { parseApiError } from '../../utils/formatters';
 
 function ProfileDetailsForm({ user, refreshUser, onMessage, onError }) {
@@ -75,6 +78,19 @@ export default function ProfilePage() {
       <h2 className="text-2xl font-bold text-slate-900">Profile</h2>
       {message && <div className="alert-success">{message}</div>}
       <ErrorMessage message={error} />
+
+      {user && (
+        <AvatarUploadSection
+          user={user}
+          onUpdated={refreshUser}
+          onMessage={setMessage}
+          onError={setError}
+        />
+      )}
+
+      {user && user.role_slugs?.includes(ROLES.DENTIST) && (
+        <DentistProfileForm onMessage={setMessage} onError={setError} />
+      )}
 
       {user && (
         <ProfileDetailsForm

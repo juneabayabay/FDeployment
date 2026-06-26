@@ -11,6 +11,8 @@ class UsersConfig(AppConfig):
     name = "users"
 
     def ready(self):
+        import users.signals  # noqa: F401
+
         if any(cmd in sys.argv for cmd in ("migrate", "makemigrations", "test", "check_email", "sendtestemail")):
             return
 

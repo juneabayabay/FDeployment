@@ -18,6 +18,7 @@ import PatientBillingPage from './pages/patient/PatientBillingPage';
 import WaitingListPage from './pages/patient/WaitingListPage';
 import PatientNotificationsPage from './pages/patient/PatientNotificationsPage';
 import PatientProfilePage from './pages/patient/PatientProfilePage';
+import PatientDentistsPage from './pages/patient/PatientDentistsPage';
 import ProtectedRoute from './routes/ProtectedRoute';
 import RoleProtectedRoute from './routes/RoleProtectedRoute';
 import LegacyStaffRedirect from './routes/LegacyStaffRedirect';
@@ -60,6 +61,7 @@ export default function App() {
           <Route element={<PatientLayout />}>
             <Route path="/patient/dashboard" element={<PatientDashboardPage />} />
             <Route path="/patient/book" element={<BookAppointmentPage />} />
+            <Route path="/patient/dentists" element={<PatientDentistsPage />} />
             <Route path="/patient/calendar" element={<AppointmentCalendarPage />} />
             <Route path="/patient/appointments" element={<PatientAppointmentsPage />} />
             <Route path="/patient/billing" element={<PatientBillingPage />} />

@@ -12,6 +12,9 @@ import {
   useCompatibleSlots,
 } from '../../hooks/useAppointments';
 import { useCreateStaffAppointment } from '../../hooks/useStaffAppointments';
+import { useDentistDirectory } from '../../hooks/useDentists';
+import DentistDirectoryPanel from '../../components/dentists/DentistDirectoryPanel';
+import AppointmentParticipants from '../../components/appointments/AppointmentParticipants';
 import { usePatientList } from '../../hooks/usePatients';
 import { useStaffPaths } from '../../hooks/useStaffPaths';
 import { parseApiDate, toApiDate } from '../../utils/clinicDates';
@@ -25,10 +28,12 @@ export default function BookAppointmentPage() {
   const [selectedProcedures, setSelectedProcedures] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [notes, setNotes] = useState('');
+  const [preferredDentist, setPreferredDentist] = useState(null);
   const [error, setError] = useState('');
 
   const clinic = useClinicInfo();
   const procedures = useProcedures();
+  const dentists = useDentistDirectory();
   const patients = usePatientList({ search: patientSearch || undefined });
   const createMutation = useCreateStaffAppointment();
 
@@ -69,6 +74,7 @@ export default function BookAppointmentPage() {
         start_time: startTime,
         procedure_ids: selectedProcedures,
         booking_type: bookingType,
+        dentist_id: preferredDentist?.user_id ?? null,
         notes,
       });
       navigate(path('/appointments'), {
@@ -81,6 +87,7 @@ export default function BookAppointmentPage() {
   };
 
   const patientOptions = patients.data || [];
+  const selectedPatient = patientOptions.find((p) => String(p.id) === String(patientId));
 
   return (
     <div className="space-y-6">
@@ -134,6 +141,40 @@ export default function BookAppointmentPage() {
           procedures.refetch();
         }}
       >
+        <DentistDirectoryPanel
+          dentists={dentists.data?.results ?? []}
+          loading={dentists.isLoading}
+          error={dentists.error}
+          onRetry={() => dentists.refetch()}
+          selectable
+          selectedDentistId={preferredDentist?.id}
+          onSelectDentist={(dentist) =>
+            setPreferredDentist((current) =>
+              current?.id === dentist.id ? null : dentist
+            )
+          }
+          title="Assign dentist (optional)"
+          subtitle="Select the dentist for this appointment."
+        />
+
+        {(selectedPatient || preferredDentist) && (
+          <div className="card">
+            <p className="mb-3 text-sm font-medium text-slate-700">Booking preview</p>
+            <AppointmentParticipants
+              patient={selectedPatient}
+              dentist={
+                preferredDentist
+                  ? {
+                      ...preferredDentist,
+                      full_name: preferredDentist.display_name,
+                      role_slugs: ['dentist'],
+                    }
+                  : null
+              }
+            />
+          </div>
+        )}
+
         <ClinicPolicyBanner clinic={clinic.data} />
         <BookingForm
           procedures={procList}

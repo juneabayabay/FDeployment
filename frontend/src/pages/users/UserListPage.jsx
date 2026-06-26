@@ -6,12 +6,11 @@ import UserTable from '../../components/users/UserTable';
 import { usePermission } from '../../hooks/usePermission';
 import { useStaffPaths } from '../../hooks/useStaffPaths';
 import { useUsers } from '../../hooks/useUsers';
-import { ROLES } from '../../utils/constants';
 import { parsePaginated } from '../../utils/pagination';
 
 export default function UserListPage() {
   const [page, setPage] = useState(1);
-  const { hasRole } = usePermission();
+  const { can } = usePermission();
   const { path } = useStaffPaths();
   const users = useUsers({ page });
   const { results, totalPages } = parsePaginated(users.data);
@@ -22,7 +21,7 @@ export default function UserListPage() {
         title="Users"
         subtitle="Manage clinic staff and accounts"
         actions={
-          hasRole(ROLES.ADMIN) ? (
+          can('users.create') ? (
             <div className="flex flex-wrap gap-2">
               <Link to={path('/users/create-staff?role=dentist')} className="btn-outline">
                 + Create Dentist

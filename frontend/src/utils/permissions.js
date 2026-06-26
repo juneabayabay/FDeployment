@@ -1,3 +1,5 @@
+import { ROLES } from './constants';
+
 export const hasPermission = (user, permission) => {
   if (!user) return false;
   if (user.is_superuser) return true;
@@ -9,7 +11,10 @@ export const hasAnyPermission = (user, permissions = []) => {
 };
 
 export const hasRole = (user, role) => {
-  return user?.role_slugs?.includes(role) ?? false;
+  if (!user) return false;
+  // Match userHasRoleAccess: superusers may use admin-only routes without a UserRole row
+  if (role === ROLES.ADMIN && user.is_superuser) return true;
+  return user.role_slugs?.includes(role) ?? false;
 };
 
 export const hasAnyRole = (user, roles = []) => {

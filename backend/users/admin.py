@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import ClinicPermission, Role, RolePermission, User, UserRole
+from .models import ClinicPermission, DentistProfile, Role, RolePermission, User, UserRole
 
 
 @admin.register(User)
@@ -14,7 +14,7 @@ class UserAdmin(BaseUserAdmin):
         (None, {"fields": ("email", "password")}),
         (
             "Personal info",
-            {"fields": ("username", "first_name", "last_name", "phone", "avatar_url")},
+            {"fields": ("username", "first_name", "last_name", "phone", "avatar", "avatar_url")},
         ),
         (
             "Permissions",
@@ -35,6 +35,26 @@ class UserAdmin(BaseUserAdmin):
         ),
     )
     readonly_fields = ("created_at", "updated_at", "last_login")
+
+
+@admin.register(DentistProfile)
+class DentistProfileAdmin(admin.ModelAdmin):
+    list_display = (
+        "display_name",
+        "specialization",
+        "years_experience",
+        "is_visible",
+        "updated_at",
+    )
+    list_filter = ("is_visible", "specialization")
+    search_fields = (
+        "user__email",
+        "user__first_name",
+        "user__last_name",
+        "specialization",
+    )
+    raw_id_fields = ("user",)
+    readonly_fields = ("created_at", "updated_at")
 
 
 @admin.register(Role)

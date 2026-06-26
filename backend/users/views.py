@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -31,6 +32,7 @@ from .email_templates import build_password_reset_email
 from .throttles import AuthAnonRateThrottle
 from .email_utils import is_smtp_ready, send_password_reset_email, smtp_setup_hint
 from .utils import blacklist_user_tokens
+from .avatar import delete_stored_avatar, validate_avatar_file
 
 
 class RegisterView(generics.CreateAPIView):
@@ -43,7 +45,10 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        return Response(
+            UserSerializer(user, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -109,6 +114,50 @@ class ChangePasswordView(APIView):
         return Response({"detail": "Password updated successfully."})
 
 
+class CurrentUserAvatarView(APIView):
+    """Upload or remove the authenticated user's profile picture."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        uploaded = request.FILES.get("avatar")
+        if not uploaded:
+            return Response(
+                {"avatar": ["No file was submitted."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            validate_avatar_file(uploaded)
+        except DjangoValidationError as exc:
+            return Response(
+                {"avatar": exc.messages},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = request.user
+        delete_stored_avatar(user)
+        user.avatar = uploaded
+        user.avatar_url = ""
+        user.save(update_fields=["avatar", "avatar_url", "updated_at"])
+
+        return Response(
+            UserSerializer(user, context={"request": request}).data,
+            status=status.HTTP_200_OK,
+        )
+
+    def delete(self, request):
+        user = request.user
+        delete_stored_avatar(user)
+        user.avatar = None
+        user.avatar_url = ""
+        user.save(update_fields=["avatar", "avatar_url", "updated_at"])
+
+        return Response(
+            UserSerializer(user, context={"request": request}).data,
+            status=status.HTTP_200_OK,
+        )
+
+
 class ForgotPasswordView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = [AuthAnonRateThrottle]
@@ -139,7 +188,10 @@ class ForgotPasswordView(APIView):
                     "Please contact the clinic administrator."
                 )
             )
-            return Response({"detail": detail}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            return Response(
+                {"detail": detail, "code": "smtp_not_configured"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
 
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
@@ -152,7 +204,7 @@ class ForgotPasswordView(APIView):
             reset_link=reset_link,
         )
 
-        sent, _error = send_password_reset_email(
+        sent, error = send_password_reset_email(
             subject=subject,
             text_body=text_body,
             html_body=html_body,
@@ -160,13 +212,16 @@ class ForgotPasswordView(APIView):
         )
 
         if not sent:
+            detail = (
+                f"Unable to send confirmation email: {error}"
+                if settings.DEBUG and error
+                else (
+                    "Unable to send confirmation email right now. "
+                    "Please try again later or contact the clinic."
+                )
+            )
             return Response(
-                {
-                    "detail": (
-                        "Unable to send confirmation email right now. "
-                        "Please try again later or contact the clinic."
-                    ),
-                },
+                {"detail": detail, "code": "smtp_send_failed"},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 

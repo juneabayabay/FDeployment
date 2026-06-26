@@ -12,11 +12,16 @@ import {
   useCompatibleSlots,
   useCreateAppointment,
 } from '../../hooks/useAppointments';
+import { useDentistDirectory } from '../../hooks/useDentists';
+import DentistDirectoryPanel from '../../components/dentists/DentistDirectoryPanel';
+import AppointmentParticipants from '../../components/appointments/AppointmentParticipants';
+import { useAuth } from '../../hooks/useAuth';
 import { parseApiDate, toApiDate } from '../../utils/clinicDates';
 import { parseApiError } from '../../utils/formatters';
 
 export default function BookAppointmentPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const initialDate = searchParams.get('date');
 
@@ -25,10 +30,12 @@ export default function BookAppointmentPage() {
     initialDate ? parseApiDate(initialDate) : null
   );
   const [notes, setNotes] = useState('');
+  const [preferredDentist, setPreferredDentist] = useState(null);
   const [error, setError] = useState('');
 
   const clinic = useClinicInfo();
   const procedures = useProcedures();
+  const dentists = useDentistDirectory();
   const createMutation = useCreateAppointment();
 
   const procList = procedures.data || [];
@@ -63,6 +70,7 @@ export default function BookAppointmentPage() {
         start_time: startTime,
         procedure_ids: selectedProcedures,
         booking_type: bookingType,
+        dentist_id: preferredDentist?.user_id ?? null,
         notes,
       });
       navigate('/patient/appointments', {
@@ -99,6 +107,36 @@ export default function BookAppointmentPage() {
         }}
       >
         <ErrorMessage message={error} />
+
+        <DentistDirectoryPanel
+          dentists={dentists.data?.results ?? []}
+          loading={dentists.isLoading}
+          error={dentists.error}
+          onRetry={() => dentists.refetch()}
+          selectable
+          selectedDentistId={preferredDentist?.id}
+          onSelectDentist={(dentist) =>
+            setPreferredDentist((current) =>
+              current?.id === dentist.id ? null : dentist
+            )
+          }
+          title="Choose a dentist (optional)"
+          subtitle="Your selection is saved with the appointment."
+        />
+
+        {preferredDentist && (
+          <div className="card flex items-center gap-4">
+            <p className="text-sm font-medium text-slate-700">Booking preview</p>
+            <AppointmentParticipants
+              patient={user}
+              dentist={{
+                ...preferredDentist,
+                full_name: preferredDentist.display_name,
+                role_slugs: ['dentist'],
+              }}
+            />
+          </div>
+        )}
 
         <BookingForm
           procedures={procList}

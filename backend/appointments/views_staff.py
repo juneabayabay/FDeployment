@@ -20,7 +20,9 @@ from .services import calculate_cancellation_fee
 
 
 def _staff_appointment_queryset():
-    return Appointment.objects.select_related("patient").prefetch_related("procedures")
+    return Appointment.objects.select_related("patient", "dentist").prefetch_related(
+        "procedures"
+    )
 
 
 def _filter_appointments(queryset, request):
@@ -74,8 +76,9 @@ class StaffAppointmentListCreateView(StaffPermissionMixin, generics.ListCreateAP
         )
         serializer.is_valid(raise_exception=True)
         appointment = serializer.save()
+        appointment = _staff_appointment_queryset().get(pk=appointment.pk)
         return Response(
-            StaffAppointmentSerializer(appointment).data,
+            StaffAppointmentSerializer(appointment, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
         )
 
@@ -105,7 +108,7 @@ class StaffAppointmentDetailView(StaffPermissionMixin, generics.RetrieveUpdateAP
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(StaffAppointmentSerializer(instance).data)
+        return Response(StaffAppointmentSerializer(instance, context={"request": request}).data)
 
 
 class StaffAppointmentCancelView(StaffPermissionMixin, APIView):
@@ -135,7 +138,7 @@ class StaffAppointmentCancelView(StaffPermissionMixin, APIView):
         notify_appointment_cancelled(appointment, fee)
         procedure_ids = list(appointment.procedures.values_list("id", flat=True))
         notify_waiting_list_for_freed_slot(appointment.appointment_date, procedure_ids)
-        return Response(StaffAppointmentSerializer(appointment).data)
+        return Response(StaffAppointmentSerializer(appointment, context={"request": request}).data)
 
 
 class StaffAppointmentRescheduleView(StaffPermissionMixin, APIView):
@@ -159,7 +162,7 @@ class StaffAppointmentRescheduleView(StaffPermissionMixin, APIView):
         )
         serializer.is_valid(raise_exception=True)
         appointment = serializer.save_reschedule(appointment)
-        return Response(StaffAppointmentSerializer(appointment).data)
+        return Response(StaffAppointmentSerializer(appointment, context={"request": request}).data)
 
 
 class StaffScheduleView(StaffPermissionMixin, APIView):
@@ -189,7 +192,9 @@ class StaffScheduleView(StaffPermissionMixin, APIView):
         return Response(
             {
                 "date": schedule_date.isoformat(),
-                "appointments": StaffAppointmentSerializer(appointments, many=True).data,
+                "appointments": StaffAppointmentSerializer(
+                    appointments, many=True, context={"request": request}
+                ).data,
             }
         )
 
@@ -265,6 +270,6 @@ class StaffWaitingListBookView(StaffPermissionMixin, APIView):
         entry.is_active = False
         entry.save(update_fields=["is_active"])
         return Response(
-            StaffAppointmentSerializer(appointment).data,
+            StaffAppointmentSerializer(appointment, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
         )

@@ -40,6 +40,9 @@ PERMISSIONS = [
     ("audit.export", "Export audit logs", "audit", "export", "Export audit logs"),
     # Braces / down payments
     ("billing.approve", "Approve down payments", "billing", "approve", "Approve braces down payments"),
+    # Dentist directory
+    ("dentists.view", "View dentist profiles", "dentists", "view", "View dentist directory"),
+    ("dentists.manage", "Manage dentist profiles", "dentists", "manage", "Create and update dentist profiles"),
 ]
 
 ROLE_PERMISSIONS = {
@@ -56,6 +59,7 @@ ROLE_PERMISSIONS = {
         "billing.view",
         "billing.approve",
         "reports.view",
+        "dentists.view",
     ],
     "receptionist": [
         "users.view",
@@ -71,11 +75,13 @@ ROLE_PERMISSIONS = {
         "billing.create",
         "billing.update",
         "reports.view",
+        "dentists.view",
     ],
     "user": [
         "patients.view",
         "appointments.view",
         "treatments.view",
         "billing.view",
+        "dentists.view",
     ],
 }

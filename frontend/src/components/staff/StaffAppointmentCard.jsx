@@ -1,5 +1,6 @@
 import { formatDate, formatPrice, formatTime } from '../../utils/formatters';
 import { getStatusBadgeClass, getStatusLabel } from '../../utils/appointmentStatus';
+import AppointmentParticipants from '../appointments/AppointmentParticipants';
 
 const STATUS_OPTIONS = ['pending', 'pencil_booked', 'confirmed', 'completed', 'no_show'];
 
@@ -16,11 +17,12 @@ export default function StaffAppointmentCard({
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate font-semibold text-slate-900">
-            {appointment.patient?.full_name || appointment.patient?.email || '—'}
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
+        <div className="min-w-0 flex-1">
+          <AppointmentParticipants
+            patient={appointment.patient}
+            dentist={appointment.dentist}
+          />
+          <p className="mt-3 text-sm text-slate-600">
             {formatDate(appointment.appointment_date)} · {formatTime(appointment.start_time)} –{' '}
             {formatTime(appointment.end_time)}
           </p>

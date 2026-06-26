@@ -9,6 +9,7 @@ import {
   SurgicalRecordCard,
 } from '../../components/staff/PatientDetailClinicalCard';
 import ErrorMessage from '../../components/common/ErrorMessage';
+import Avatar from '../../components/common/Avatar';
 import PageHeader from '../../components/common/PageHeader';
 import AlertBanner from '../../components/common/AlertBanner';
 import QueryState from '../../components/common/QueryState';
@@ -42,6 +43,7 @@ import {
   unwrapList,
 } from '../../utils/formatters';
 import { getStatusBadgeClass, getStatusLabel, getPaymentStatusLabel } from '../../utils/appointmentStatus';
+import { ROLES } from '../../utils/constants';
 
 const TABS = [
   { id: 'profile', label: 'Profile' },
@@ -206,13 +208,22 @@ export default function AdminPatientDetailPage() {
           <div className="card space-y-4">
             {!editForm ? (
               <>
-                <dl className="grid gap-3 sm:grid-cols-2">
+                <div className="flex items-center gap-4 border-b border-slate-100 pb-4">
+                  <Avatar
+                    user={{
+                      ...p,
+                      role_slugs: p.role_slugs?.length ? p.role_slugs : [ROLES.USER],
+                    }}
+                    size="lg"
+                  />
                   <div>
-                    <dt className="text-xs font-medium uppercase text-slate-400">Name</dt>
-                    <dd className="text-slate-900">
+                    <p className="font-semibold text-slate-900">
                       {p.full_name || `${p.first_name} ${p.last_name}`.trim()}
-                    </dd>
+                    </p>
+                    <p className="text-sm text-slate-500">{p.email}</p>
                   </div>
+                </div>
+                <dl className="grid gap-3 sm:grid-cols-2">
                   <div>
                     <dt className="text-xs font-medium uppercase text-slate-400">Email</dt>
                     <dd className="text-slate-900">{p.email}</dd>

@@ -39,8 +39,11 @@ def is_smtp_ready():
 
 def smtp_setup_hint():
     return (
-        "Email is not configured. Set EMAIL_HOST_USER and EMAIL_HOST_PASSWORD "
-        "in the server environment (see backend/.env.example)."
+        "Gmail is not configured. In backend/.env set EMAIL_HOST_USER=your@gmail.com, "
+        "EMAIL_HOST_PASSWORD=your-16-char-app-password, EMAIL_HOST=smtp.gmail.com, "
+        "and EMAIL_USE_TLS=True. Create an App Password at "
+        "https://myaccount.google.com/apppasswords (2-Step Verification required). "
+        "Restart the backend, then run: python manage.py check_email your@gmail.com"
     )
 
 

@@ -111,6 +111,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     roles = serializers.SerializerMethodField()
+    avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -144,6 +145,15 @@ class UserSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def get_avatar_url(self, obj):
+        request = self.context.get("request")
+        if obj.avatar:
+            url = obj.avatar.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        return obj.avatar_url or None
+
     def get_roles(self, obj):
         roles = Role.objects.filter(user_roles__user=obj)
         return RoleSerializer(roles, many=True).data
@@ -163,7 +173,6 @@ class PublicRegisterSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone",
-            "avatar_url",
             "password",
             "password_confirm",
         ]
@@ -200,7 +209,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone",
-            "avatar_url",
             "password",
             "password_confirm",
             "role_slug",
@@ -246,7 +254,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone",
-            "avatar_url",
         ]
 
 

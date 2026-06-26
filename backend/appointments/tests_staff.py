@@ -43,14 +43,8 @@ class StaffAPITestCase(APITestCase):
                 price="500.00",
             )
 
-    def _auth(self, user, password="TestPass123!"):
-        login = self.client.post(
-            "/api/users/token/",
-            {"email": user.email, "password": password},
-            format="json",
-        )
-        self.assertEqual(login.status_code, status.HTTP_200_OK)
-        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {login.data['access']}")
+    def _auth(self, user):
+        self.client.force_authenticate(user=user)
 
     def test_patient_cannot_access_staff_appointments(self):
         self._auth(self.patient)

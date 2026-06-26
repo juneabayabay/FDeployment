@@ -15,6 +15,16 @@ export const authService = {
 
   changePassword: (data) => httpClient.post('/users/me/change-password/', data),
 
+  uploadAvatar: (file) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return httpClient.post('/users/me/avatar/', formData, {
+      headers: { 'Content-Type': undefined },
+    });
+  },
+
+  deleteAvatar: () => httpClient.delete('/users/me/avatar/'),
+
   forgotPassword: (email) => httpClient.post('/users/password/forgot/', { email }),
 
   resetPassword: (data) => httpClient.post('/users/password/reset/', data),

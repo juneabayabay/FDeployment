@@ -6,6 +6,8 @@ from rest_framework import serializers
 
 from notifications.services import notify_appointment_cancelled, notify_appointment_confirmed
 
+from users.models import Role, User
+
 from .models import Appointment, Procedure, WaitingListEntry
 from .services import (
     SlotUnavailableError,
@@ -38,6 +40,41 @@ class ProcedureSerializer(serializers.ModelSerializer):
         return int(hours) if hours == int(hours) else hours
 
 
+class AppointmentUserSummarySerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(read_only=True)
+    avatar_url = serializers.SerializerMethodField()
+    role_slugs = serializers.ListField(child=serializers.CharField(), read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "full_name",
+            "avatar_url",
+            "role_slugs",
+        ]
+
+    def get_avatar_url(self, obj):
+        from users.serializers_dentist import resolve_user_avatar_url
+
+        return resolve_user_avatar_url(obj, self.context.get("request"))
+
+
+def _validate_dentist_user(user_id):
+    if user_id is None:
+        return None
+    try:
+        user = User.objects.get(pk=user_id, deleted_at__isnull=True, is_active=True)
+    except User.DoesNotExist as exc:
+        raise serializers.ValidationError("Dentist not found.") from exc
+    if not user.user_roles.filter(role__slug=Role.DENTIST).exists():
+        raise serializers.ValidationError("Selected user is not a dentist.")
+    return user
+
+
 class AppointmentSerializer(serializers.ModelSerializer):
     procedures = ProcedureSerializer(many=True, read_only=True)
     procedure_ids = serializers.PrimaryKeyRelatedField(
@@ -47,6 +84,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False,
     )
+    dentist = AppointmentUserSummarySerializer(read_only=True)
     is_active = serializers.BooleanField(read_only=True)
 
     class Meta:
@@ -60,6 +98,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "booking_type",
             "procedures",
             "procedure_ids",
+            "dentist",
             "total_duration_minutes",
             "total_amount",
             "notes",
@@ -92,6 +131,10 @@ class AppointmentCreateSerializer(serializers.Serializer):
         default=Appointment.BookingType.PENCIL,
     )
     notes = serializers.CharField(required=False, allow_blank=True, default="")
+    dentist_id = serializers.IntegerField(required=False, allow_null=True)
+
+    def validate_dentist_id(self, value):
+        return _validate_dentist_user(value)
 
     def validate(self, attrs):
         appt_date = attrs["appointment_date"]
@@ -142,7 +185,8 @@ class AppointmentCreateSerializer(serializers.Serializer):
     def create(self, validated_data):
         user = self.context["request"].user
         procedures = validated_data.pop("procedures")
-        validated_data.pop("procedure_ids")
+        validated_data.pop("procedure_ids", None)
+        dentist = validated_data.pop("dentist_id", None)
         booking_type = validated_data.pop("booking_type")
         total_duration = validated_data.pop("total_duration_minutes")
         total_amount = validated_data.pop("total_amount")
@@ -163,6 +207,7 @@ class AppointmentCreateSerializer(serializers.Serializer):
 
         appointment = Appointment.objects.create(
             patient=user,
+            dentist=dentist,
             booking_type=booking_type,
             status=status,
             total_duration_minutes=total_duration,

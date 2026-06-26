@@ -15,6 +15,8 @@ import { useListPage, useResetPageOnChange, usePaginatedData } from '../../hooks
 import { usePermission } from '../../hooks/usePermission';
 import { useStaffPaths } from '../../hooks/useStaffPaths';
 import { parseApiError } from '../../utils/formatters';
+import Avatar from '../../components/common/Avatar';
+import { ROLES } from '../../utils/constants';
 
 const emptyForm = {
   email: '',
@@ -75,7 +77,18 @@ export default function PatientListPage() {
     {
       key: 'name',
       label: 'Name',
-      render: (row) => row.full_name || `${row.first_name} ${row.last_name}`.trim() || '—',
+      render: (row) => (
+        <div className="flex items-center gap-3">
+          <Avatar
+            user={{
+              ...row,
+              role_slugs: row.role_slugs?.length ? row.role_slugs : [ROLES.USER],
+            }}
+            size="sm"
+          />
+          <span>{row.full_name || `${row.first_name} ${row.last_name}`.trim() || '—'}</span>
+        </div>
+      ),
     },
     { key: 'email', label: 'Email' },
     { key: 'phone', label: 'Phone', render: (row) => row.phone || '—' },

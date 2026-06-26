@@ -69,6 +69,13 @@ class Appointment(models.Model):
         on_delete=models.CASCADE,
         related_name="appointments",
     )
+    dentist = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="dentist_appointments",
+    )
     appointment_date = models.DateField()
     start_time = models.TimeField()
     end_time = models.TimeField()
@@ -101,6 +108,10 @@ class Appointment(models.Model):
         indexes = [
             models.Index(fields=["appointment_date", "start_time"]),
             models.Index(fields=["patient", "status"]),
+            models.Index(
+                fields=["dentist", "appointment_date"],
+                name="appointment_dentist_0a1b2c_idx",
+            ),
         ]
 
     def __str__(self):

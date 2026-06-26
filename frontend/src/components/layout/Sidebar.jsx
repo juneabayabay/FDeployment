@@ -1,14 +1,17 @@
 import { NavLink } from 'react-router-dom';
 import { APP_NAME, getNavItemsForPrefix, getPortalLabel } from '../../utils/constants';
+import { useAuth } from '../../hooks/useAuth';
 import { usePermission } from '../../hooks/usePermission';
+import { userHasRoleAccess } from '../../utils/auth';
 
 export default function Sidebar({ basePath = '', mobileOpen = false, onClose }) {
-  const { can, hasRole } = usePermission();
+  const { user } = useAuth();
+  const { can } = usePermission();
   const navItems = getNavItemsForPrefix(basePath);
 
   const visibleItems = navItems
     .filter((item) => {
-      if (item.role && !hasRole(item.role)) return false;
+      if (item.role && !userHasRoleAccess(user, item.role)) return false;
       if (item.permission && !can(item.permission)) return false;
       return true;
     })

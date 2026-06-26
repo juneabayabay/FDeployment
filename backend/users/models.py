@@ -32,7 +32,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone = models.CharField(max_length=20, blank=True)
-    avatar_url = models.URLField(blank=True)
+    avatar = models.ImageField(upload_to="avatars/%Y/%m/", blank=True)
+    avatar_url = models.URLField(blank=True)  # legacy external URL; prefer uploaded avatar
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
@@ -101,6 +102,45 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.deleted_at = timezone.now()
         self.is_active = False
         self.save(update_fields=["deleted_at", "is_active", "updated_at"])
+
+
+class DentistProfile(models.Model):
+    """Public-facing profile for dentists shown in the patient directory."""
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="dentist_profile",
+    )
+    title = models.CharField(max_length=100, blank=True, default="Dr.")
+    specialization = models.CharField(max_length=150, blank=True)
+    years_experience = models.PositiveSmallIntegerField(default=0)
+    bio = models.TextField(blank=True)
+    schedule_summary = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Short schedule text, e.g. Mon–Fri 9:00 AM – 5:00 PM",
+    )
+    is_visible = models.BooleanField(
+        default=True,
+        help_text="Show this dentist in the patient-facing directory",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "dentist_profiles"
+        ordering = ["user__last_name", "user__first_name"]
+
+    def __str__(self):
+        return f"{self.display_name} — {self.specialization or 'Dentist'}"
+
+    @property
+    def display_name(self):
+        name = self.user.full_name
+        if self.title and not name.lower().startswith(self.title.lower().rstrip(".")):
+            return f"{self.title.rstrip('.')}. {name}".strip()
+        return name
 
 
 class Role(models.Model):

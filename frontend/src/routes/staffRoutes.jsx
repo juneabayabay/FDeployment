@@ -16,7 +16,7 @@ import ReceptionistBookPage from '../pages/receptionist/BookAppointmentPage';
 import ReceptionistBillingPage from '../pages/receptionist/BillingPage';
 import ReceptionistSchedulePage from '../pages/receptionist/SchedulePage';
 import ReceptionistWaitingListPage from '../pages/receptionist/WaitingListPage';
-import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
+import AdminDentistDirectoryPage from '../pages/admin/AdminDentistDirectoryPage';
 import AdminPatientDetailPage from '../pages/admin/AdminPatientDetailPage';
 import AdminReportsPage from '../pages/admin/AdminReportsPage';
 import SystemSettingsPage from '../pages/admin/SystemSettingsPage';
@@ -104,7 +104,7 @@ function staffPageRoutes(prefix) {
         <Route path={`${prefix}/users/:id`} element={<UserDetailPage />} />
       </Route>
 
-      <Route element={<PermissionRoute permission="users.create" roles={[ROLES.ADMIN]} />}>
+      <Route element={<PermissionRoute permission="users.create" />}>
         <Route path={`${prefix}/users/create-staff`} element={<CreateStaffPage />} />
         <Route path={`${prefix}/users/create-receptionist`} element={<CreateReceptionistPage />} />
       </Route>
@@ -119,6 +119,10 @@ function staffPageRoutes(prefix) {
 
       <Route element={<PermissionRoute permission="permissions.view" />}>
         <Route path={`${prefix}/permissions`} element={<PermissionListPage />} />
+      </Route>
+
+      <Route element={<PermissionRoute permission="dentists.view" />}>
+        <Route path={`${prefix}/dentists`} element={<AdminDentistDirectoryPage />} />
       </Route>
 
       <Route element={<PermissionRoute permission="patients.view" />}>

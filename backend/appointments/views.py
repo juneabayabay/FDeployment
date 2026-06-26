@@ -25,6 +25,10 @@ from .services import (
 )
 
 
+def _appointment_queryset():
+    return Appointment.objects.select_related("dentist").prefetch_related("procedures")
+
+
 class ProcedureListView(generics.ListAPIView):
     queryset = Procedure.objects.filter(is_active=True)
     serializer_class = ProcedureSerializer
@@ -98,9 +102,7 @@ class AppointmentListCreateView(generics.ListCreateAPIView):
         return AppointmentSerializer
 
     def get_queryset(self):
-        qs = Appointment.objects.filter(patient=self.request.user).prefetch_related(
-            "procedures"
-        )
+        qs = _appointment_queryset().filter(patient=self.request.user)
         status_filter = self.request.query_params.get("status")
         if status_filter == "active":
             qs = qs.filter(status__in=Appointment.ACTIVE_STATUSES)
@@ -121,8 +123,9 @@ class AppointmentListCreateView(generics.ListCreateAPIView):
         )
         serializer.is_valid(raise_exception=True)
         appointment = serializer.save()
+        appointment = _appointment_queryset().get(pk=appointment.pk)
         return Response(
-            AppointmentSerializer(appointment).data,
+            AppointmentSerializer(appointment, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
         )
 
@@ -132,9 +135,7 @@ class AppointmentDetailView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsPatientUser]
 
     def get_queryset(self):
-        return Appointment.objects.filter(patient=self.request.user).prefetch_related(
-            "procedures"
-        )
+        return _appointment_queryset().filter(patient=self.request.user)
 
 
 class AppointmentCancelView(APIView):
@@ -164,7 +165,9 @@ class AppointmentCancelView(APIView):
         notify_appointment_cancelled(appointment, fee)
         procedure_ids = list(appointment.procedures.values_list("id", flat=True))
         notify_waiting_list_for_freed_slot(appointment.appointment_date, procedure_ids)
-        return Response(AppointmentSerializer(appointment).data)
+        return Response(
+            AppointmentSerializer(appointment, context={"request": request}).data
+        )
 
 
 class AppointmentRescheduleView(APIView):
@@ -188,7 +191,9 @@ class AppointmentRescheduleView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         appointment = serializer.save_reschedule(appointment)
-        return Response(AppointmentSerializer(appointment).data)
+        return Response(
+            AppointmentSerializer(appointment, context={"request": request}).data
+        )
 
 
 class WaitingListView(generics.ListCreateAPIView):

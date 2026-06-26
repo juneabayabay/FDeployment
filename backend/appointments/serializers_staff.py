@@ -8,18 +8,25 @@ from .models import Appointment, WaitingListEntry
 from .serializers import (
     AppointmentCreateSerializer,
     AppointmentSerializer,
+    AppointmentUserSummarySerializer,
     ProcedureSerializer,
     WaitingListSerializer,
+    _validate_dentist_user,
 )
 
 
-class PatientSummarySerializer(serializers.ModelSerializer):
-    full_name = serializers.CharField(read_only=True)
-    role_slugs = serializers.ListField(read_only=True)
-
-    class Meta:
-        model = User
-        fields = ["id", "email", "first_name", "last_name", "full_name", "phone", "role_slugs"]
+class PatientSummarySerializer(AppointmentUserSummarySerializer):
+    class Meta(AppointmentUserSummarySerializer.Meta):
+        fields = [
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "full_name",
+            "phone",
+            "avatar_url",
+            "role_slugs",
+        ]
 
 
 class StaffAppointmentSerializer(AppointmentSerializer):
@@ -38,6 +45,10 @@ class StaffAppointmentSerializer(AppointmentSerializer):
 
 class StaffAppointmentCreateSerializer(AppointmentCreateSerializer):
     patient_id = serializers.IntegerField()
+    dentist_id = serializers.IntegerField(required=False, allow_null=True)
+
+    def validate_dentist_id(self, value):
+        return _validate_dentist_user(value)
 
     def validate_patient_id(self, value):
         try:
@@ -61,9 +72,14 @@ class StaffAppointmentCreateSerializer(AppointmentCreateSerializer):
 
 
 class StaffAppointmentUpdateSerializer(serializers.ModelSerializer):
+    dentist_id = serializers.IntegerField(required=False, allow_null=True)
+
     class Meta:
         model = Appointment
-        fields = ["status", "notes"]
+        fields = ["status", "notes", "dentist_id"]
+
+    def validate_dentist_id(self, value):
+        return _validate_dentist_user(value)
 
     def validate_status(self, value):
         allowed = {choice[0] for choice in Appointment.Status.choices}
@@ -72,6 +88,8 @@ class StaffAppointmentUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def update(self, instance, validated_data):
+        if "dentist_id" in validated_data:
+            instance.dentist = validated_data.pop("dentist_id")
         old_status = instance.status
         instance = super().update(instance, validated_data)
         if (

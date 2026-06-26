@@ -4,6 +4,7 @@ import PageHeader from '../../components/common/PageHeader';
 import QueryState from '../../components/common/QueryState';
 import { useStaffPaths } from '../../hooks/useStaffPaths';
 import { useStaffSchedule } from '../../hooks/useStaffAppointments';
+import AppointmentParticipants from '../../components/appointments/AppointmentParticipants';
 import { formatDate, formatDuration, formatPrice, formatTime } from '../../utils/formatters';
 import { getStatusBadgeClass, getStatusLabel } from '../../utils/appointmentStatus';
 import { toApiDate } from '../../utils/clinicDates';
@@ -86,15 +87,13 @@ export default function SchedulePage() {
         <div className="space-y-3">
           {appointments.map((appt) => (
             <div key={appt.id} className="card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex gap-4">
+              <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
                 <div className="min-w-[5rem] text-center">
                   <p className="text-lg font-bold text-sky-700">{formatTime(appt.start_time)}</p>
                   <p className="text-xs text-slate-500">{formatDuration(appt.total_duration_minutes)}</p>
                 </div>
-                <div>
-                  <p className="font-semibold text-slate-900">
-                    {appt.patient?.full_name || appt.patient?.email || 'Unknown patient'}
-                  </p>
+                <div className="flex-1 space-y-2">
+                  <AppointmentParticipants patient={appt.patient} dentist={appt.dentist} />
                   <p className="text-sm text-slate-500">
                     {(appt.procedures || []).map((p) => p.name).join(', ') || 'No procedures'}
                   </p>

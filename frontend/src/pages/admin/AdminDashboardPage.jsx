@@ -7,11 +7,12 @@ import { usePermission } from '../../hooks/usePermission';
 import { useStaffPaths } from '../../hooks/useStaffPaths';
 import { useDashboardStats } from '../../hooks/useReports';
 import { ADMIN_NAV_ITEMS } from '../../utils/constants';
+import { userHasRoleAccess } from '../../utils/auth';
 import { formatPrice } from '../../utils/formatters';
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
-  const { can, hasRole } = usePermission();
+  const { can } = usePermission();
   const { path } = useStaffPaths();
   const statsQuery = useDashboardStats(can('reports.view'));
 
@@ -33,7 +34,7 @@ export default function AdminDashboardPage() {
 
   const quickLinks = ADMIN_NAV_ITEMS.filter((item) => {
     if (item.path === '/dashboard') return false;
-    if (item.role && !hasRole(item.role)) return false;
+    if (item.role && !userHasRoleAccess(user, item.role)) return false;
     if (item.permission && !can(item.permission)) return false;
     return true;
   });

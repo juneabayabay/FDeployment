@@ -15,6 +15,7 @@ import {
 import { useListPage, useResetPageOnChange, usePaginatedData } from '../../hooks/usePaginatedList';
 import { useStaffPaths } from '../../hooks/useStaffPaths';
 import { APPOINTMENT_STATUS_FILTERS } from '../../utils/constants';
+import AppointmentParticipants from '../../components/appointments/AppointmentParticipants';
 import { formatDate, formatPrice, formatTime, parseApiError } from '../../utils/formatters';
 import { getStatusBadgeClass, getStatusLabel } from '../../utils/appointmentStatus';
 
@@ -84,9 +85,11 @@ export default function AppointmentsPage() {
       render: (row) => `${formatTime(row.start_time)} – ${formatTime(row.end_time)}`,
     },
     {
-      key: 'patient',
-      label: 'Patient',
-      render: (row) => row.patient?.full_name || row.patient?.email || '—',
+      key: 'people',
+      label: 'People',
+      render: (row) => (
+        <AppointmentParticipants patient={row.patient} dentist={row.dentist} compact />
+      ),
     },
     {
       key: 'procedures',

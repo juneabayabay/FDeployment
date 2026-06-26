@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FiMenu } from 'react-icons/fi';
+import Avatar from '../common/Avatar';
 import { useAuth } from '../../hooks/useAuth';
 import { usePermission } from '../../hooks/usePermission';
 import { getLoginPortal, portalLoginPath } from '../../utils/storage';
@@ -27,6 +28,7 @@ export default function Header({ basePath = '', onMenuClick }) {
             <FiMenu className="h-5 w-5" />
           </button>
         )}
+        <Avatar user={user} size="sm" className="hidden sm:block" />
         <div className="min-w-0 max-w-[9rem] sm:max-w-xs md:max-w-none">
           <div className="truncate font-medium text-slate-900">{user?.full_name || user?.email}</div>
           <div className="hidden truncate text-xs capitalize text-slate-500 sm:block">

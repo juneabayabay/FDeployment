@@ -13,3 +13,4 @@ export { settingsService } from './settings.service';
 export { auditService } from './audit.service';
 export { downPaymentsService } from './down-payments.service';
 export { clinicalService } from './clinical.service';
+export { dentistsService } from './dentists.service';

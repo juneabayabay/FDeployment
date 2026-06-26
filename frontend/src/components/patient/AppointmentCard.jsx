@@ -1,19 +1,23 @@
 import { formatDate, formatDuration, formatPrice, formatTime } from '../../utils/formatters';
 import { getStatusBadgeClass, getStatusLabel } from '../../utils/appointmentStatus';
+import AppointmentParticipants from '../appointments/AppointmentParticipants';
 import PencilCountdown from './PencilCountdown';
 
 export default function AppointmentCard({ appointment, onCancel, onReschedule, cancelling, showActions = true }) {
   return (
     <article className="card">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+        <div className="flex-1">
           <span className={`badge ${getStatusBadgeClass(appointment.status)}`}>
             {getStatusLabel(appointment.status)}
           </span>
           <h3 className="mt-2 font-semibold text-slate-900">
             {formatDate(appointment.appointment_date)} at {formatTime(appointment.start_time)}
           </h3>
-          <p className="mt-1 text-sm text-slate-600">
+          <div className="mt-3">
+            <AppointmentParticipants dentist={appointment.dentist} showPatient={false} />
+          </div>
+          <p className="mt-3 text-sm text-slate-600">
             {appointment.procedures?.map((p) => p.name).join(', ')}
           </p>
           <p className="mt-1 text-sm text-slate-500">
@@ -47,6 +51,11 @@ export function AppointmentHistoryItem({ appointment }) {
       <span className={`badge ${getStatusBadgeClass(appointment.status)}`}>
         {getStatusLabel(appointment.status)}
       </span>
+      <AppointmentParticipants
+        dentist={appointment.dentist}
+        showPatient={false}
+        compact
+      />
       <span className="text-slate-600">{appointment.procedures?.map((p) => p.name).join(', ')}</span>
     </li>
   );

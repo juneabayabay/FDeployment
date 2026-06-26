@@ -84,6 +84,7 @@ export const DENTIST_NAV_ITEMS = [
   { path: '/dashboard', label: 'Dashboard', permission: null },
   { path: '/schedule', label: "Today's Schedule", permission: 'appointments.view' },
   { path: '/patients', label: 'Patient Records', permission: 'patients.view' },
+  { path: '/profile', label: 'My profile', permission: null },
   { path: '/braces-approvals', label: 'Braces Approvals', permission: 'billing.approve' },
   { path: '/reports', label: 'Reports', permission: 'reports.view' },
 ];
@@ -95,6 +96,7 @@ export const ADMIN_NAV_ITEMS = [
   { path: '/schedule', label: 'Daily Schedule', permission: 'appointments.view' },
   { path: '/appointments/book', label: 'Book Appointment', permission: 'appointments.create' },
   { path: '/patients', label: 'Patient Records', permission: 'patients.view' },
+  { path: '/dentists', label: 'Dentist Directory', permission: 'dentists.view' },
   { path: '/billing', label: 'Billing', permission: 'billing.view' },
   { path: '/braces-approvals', label: 'Braces Approvals', permission: 'billing.approve' },
   { path: '/waiting-list', label: 'Waiting List', permission: 'appointments.view' },
@@ -147,6 +149,7 @@ export const PAYMENT_STATUS_FILTERS = [
 export const PATIENT_NAV_ITEMS = [
   { path: '/patient/dashboard', label: 'Dashboard', icon: 'home' },
   { path: '/patient/book', label: 'Book', icon: 'calendar-plus' },
+  { path: '/patient/dentists', label: 'Dentists', icon: 'user-md' },
   { path: '/patient/calendar', label: 'Calendar', icon: 'calendar' },
   { path: '/patient/appointments', label: 'Appointments', icon: 'clipboard' },
   { path: '/patient/billing', label: 'Billing', icon: 'credit-card' },
@@ -165,6 +168,7 @@ export const PATIENT_BOTTOM_NAV = [
 
 export const PATIENT_MORE_NAV = [
   { path: '/patient/calendar', label: 'Calendar', icon: 'calendar' },
+  { path: '/patient/dentists', label: 'Dentists', icon: 'user-md' },
   { path: '/patient/waiting-list', label: 'Waiting List', icon: 'clock' },
   { path: '/patient/notifications', label: 'Notifications', icon: 'bell', badge: true },
   { path: '/patient/profile', label: 'Profile', icon: 'user' },
@@ -203,4 +207,7 @@ export const QUERY_KEYS = {
   patientTreatments: (id) => ['patient-treatments', id],
   patientOrthodontic: (id) => ['patient-orthodontic', id],
   patientSurgical: (id) => ['patient-surgical', id],
+  dentistDirectory: (params) => ['dentist-directory', params],
+  dentistProfiles: (params) => ['dentist-profiles', params],
+  myDentistProfile: ['my-dentist-profile'],
 };

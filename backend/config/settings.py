@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
 
@@ -90,13 +91,24 @@ def _db_ssl_options() -> dict:
 
 
 _database_url = os.environ.get("DATABASE_URL")
+# Local dev: do not use remote DATABASE_URL unless explicitly opted in (avoids exhausting Aiven slots).
+if _database_url and DEBUG and os.environ.get("USE_REMOTE_DB", "").lower() not in (
+    "true",
+    "1",
+    "yes",
+):
+    _database_url = None
+
 if _database_url:
+    # Fix common typo: sslmode-require → sslmode=require (Aiven / dashboard paste errors)
+    if "sslmode-require" in _database_url:
+        _database_url = _database_url.replace("sslmode-require", "sslmode=require")
     import dj_database_url
 
     DATABASES = {
         "default": dj_database_url.config(
             default=_database_url,
-            conn_max_age=600,
+            conn_max_age=int(os.environ.get("DB_CONN_MAX_AGE", "60")),
             conn_health_checks=True,
         ),
     }
@@ -139,6 +151,8 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -171,6 +185,7 @@ if not DEBUG:
 AUTH_USER_MODEL = "users.User"
 
 REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "config.exceptions.api_exception_handler",
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
@@ -190,6 +205,8 @@ REST_FRAMEWORK = {
     },
 }
 
+TESTING = "test" in sys.argv
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
@@ -207,7 +224,7 @@ EMAIL_BACKEND = os.environ.get(
     "EMAIL_BACKEND",
     "django.core.mail.backends.console.EmailBackend",
 )
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() in ("true", "1", "yes")
 EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() in ("true", "1", "yes")
@@ -220,9 +237,6 @@ DEFAULT_FROM_EMAIL = (
     or "noreply@barnabasdental.com"
 )
 
-if (
-    EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend"
-    and EMAIL_HOST_USER
-    and EMAIL_HOST
-):
+# Auto-enable Gmail SMTP when credentials are present in .env
+if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
