@@ -2,14 +2,15 @@
 # Docs: https://render.com/docs/blueprint-spec
 #
 # Set secret env vars in the Render dashboard (sync: false entries):
-#   ALLOWED_HOSTS, DATABASE_URL, CORS_ALLOWED_ORIGINS, FRONTEND_URL, SMTP vars
+#   ALLOWED_HOSTS, DATABASE_URL, CORS_ALLOWED_ORIGINS, FRONTEND_URL,
+#   CSRF_TRUSTED_ORIGINS (optional; defaults to CORS list), SMTP vars
 
 services:
   - type: web
     name: barnabas-api
     runtime: python
     rootDir: backend
-    buildCommand: pip install -r requirements-prod.txt && python manage.py collectstatic --noinput
+    buildCommand: pip install -r requirements-prod.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput
     startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
     preDeployCommand: python manage.py migrate --noinput
     healthCheckPath: /admin/login/
@@ -31,6 +32,8 @@ services:
       - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: FRONTEND_URL
+        sync: false
+      - key: CSRF_TRUSTED_ORIGINS
         sync: false
       - key: EMAIL_HOST
         sync: false
