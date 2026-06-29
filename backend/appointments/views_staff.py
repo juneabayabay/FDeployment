@@ -16,7 +16,7 @@ from .serializers_staff import (
     StaffAppointmentUpdateSerializer,
     StaffWaitingListSerializer,
 )
-from .services import calculate_cancellation_fee
+from .services import calculate_cancellation_fee, get_next_available_slot, get_slots_meta
 
 
 def _staff_appointment_queryset():
@@ -214,7 +214,10 @@ class StaffWaitingListView(StaffPermissionMixin, generics.ListAPIView):
                 | Q(patient__first_name__icontains=search)
                 | Q(patient__last_name__icontains=search)
             )
-        return qs
+        suggested = self.request.query_params.get("suggested", "").lower()
+        if suggested in ("true", "1"):
+            qs = qs.filter(suggested_for_date__isnull=False)
+        return qs.order_by("-suggested_for_date", "-created_at")
 
 
 class StaffWaitingListDeactivateView(StaffPermissionMixin, APIView):
@@ -268,8 +271,91 @@ class StaffWaitingListBookView(StaffPermissionMixin, APIView):
         serializer.is_valid(raise_exception=True)
         appointment = serializer.save()
         entry.is_active = False
-        entry.save(update_fields=["is_active"])
+        entry.suggested_for_date = None
+        entry.save(update_fields=["is_active", "suggested_for_date"])
         return Response(
             StaffAppointmentSerializer(appointment, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
+        )
+
+
+class StaffNextAvailableSlotView(StaffPermissionMixin, APIView):
+    staff_permissions = {"GET": "appointments.view"}
+
+    def get(self, request):
+        date_str = request.query_params.get("date")
+        duration_str = request.query_params.get("duration_minutes")
+        if not date_str or duration_str is None:
+            return Response(
+                {"detail": "date and duration_minutes query parameters are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            slot_date = date.fromisoformat(date_str)
+            duration_minutes = int(duration_str)
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Invalid date or duration_minutes."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if duration_minutes < 1:
+            return Response(
+                {"detail": "duration_minutes must be at least 1."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        result = get_next_available_slot(slot_date, duration_minutes)
+        if result:
+            return Response(result)
+
+        meta = get_slots_meta(slot_date, duration_minutes)
+        return Response(
+            {
+                "date": slot_date.isoformat(),
+                "start_time": None,
+                "end_time": None,
+                "duration_minutes": duration_minutes,
+                "message": meta["message"] or "No available slots on this date.",
+            }
+        )
+
+
+class StaffNextAvailableSlotView(StaffPermissionMixin, APIView):
+    staff_permissions = {"GET": "appointments.view"}
+
+    def get(self, request):
+        date_str = request.query_params.get("date")
+        duration_str = request.query_params.get("duration_minutes")
+        if not date_str or duration_str is None:
+            return Response(
+                {"detail": "date and duration_minutes query parameters are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            slot_date = date.fromisoformat(date_str)
+            duration_minutes = int(duration_str)
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Invalid date or duration_minutes."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if duration_minutes < 1:
+            return Response(
+                {"detail": "duration_minutes must be at least 1."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        result = get_next_available_slot(slot_date, duration_minutes)
+        if result:
+            return Response(result)
+
+        meta = get_slots_meta(slot_date, duration_minutes)
+        return Response(
+            {
+                "date": slot_date.isoformat(),
+                "start_time": None,
+                "end_time": None,
+                "duration_minutes": duration_minutes,
+                "message": meta["message"] or "No available slots on this date.",
+            }
         )

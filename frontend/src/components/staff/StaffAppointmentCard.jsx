@@ -1,5 +1,5 @@
 import { formatDate, formatPrice, formatTime } from '../../utils/formatters';
-import { getStatusBadgeClass, getStatusLabel } from '../../utils/appointmentStatus';
+import { getStatusBadgeClass, getStatusLabel, getBookingSourceLabel, getBookingSourceBadgeClass } from '../../utils/appointmentStatus';
 import AppointmentParticipants from '../appointments/AppointmentParticipants';
 
 const STATUS_OPTIONS = ['pending', 'pencil_booked', 'confirmed', 'completed', 'no_show'];
@@ -31,6 +31,12 @@ export default function StaffAppointmentCard({
           {getStatusLabel(appointment.status)}
         </span>
       </div>
+
+      {appointment.booking_source && appointment.booking_source !== 'online' && (
+        <span className={`badge mt-2 ${getBookingSourceBadgeClass(appointment.booking_source)}`}>
+          {getBookingSourceLabel(appointment.booking_source)}
+        </span>
+      )}
 
       <p className="mt-2 text-sm text-slate-600">
         {(appointment.procedures || []).map((p) => p.name).join(', ') || '—'}

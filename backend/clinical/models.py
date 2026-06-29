@@ -33,6 +33,8 @@ class OrthodonticRecord(models.Model):
     )
     phase = models.CharField(max_length=100, blank=True)
     progress_notes = models.TextField(blank=True)
+    next_adjustment_date = models.DateField(null=True, blank=True)
+    adjustment_interval_weeks = models.PositiveSmallIntegerField(null=True, blank=True)
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -69,3 +71,27 @@ class SurgicalRecord(models.Model):
     class Meta:
         db_table = "surgical_records"
         ordering = ["-surgery_date", "-created_at"]
+
+
+class PrescriptionRecord(models.Model):
+    patient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="prescription_records",
+    )
+    medication = models.CharField(max_length=200)
+    dosage = models.CharField(max_length=100)
+    instructions = models.TextField(blank=True)
+    prescribed_date = models.DateField()
+    prescribed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="prescriptions_written",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "prescription_records"
+        ordering = ["-prescribed_date", "-created_at"]

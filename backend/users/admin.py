@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import ClinicPermission, DentistProfile, Role, RolePermission, User, UserRole
+from .models import ClinicPermission, DentistProfile, PatientProfile, Role, RolePermission, User, UserRole
 
 
 @admin.register(User)
@@ -53,6 +53,14 @@ class DentistProfileAdmin(admin.ModelAdmin):
         "user__last_name",
         "specialization",
     )
+    raw_id_fields = ("user",)
+    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(PatientProfile)
+class PatientProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "date_of_birth", "updated_at")
+    search_fields = ("user__email", "user__first_name", "user__last_name")
     raw_id_fields = ("user",)
     readonly_fields = ("created_at", "updated_at")
 

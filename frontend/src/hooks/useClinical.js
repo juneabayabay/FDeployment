@@ -116,3 +116,52 @@ export function useDeleteSurgical(patientId) {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.patientSurgical(patientId) }),
   });
 }
+
+export function usePatientPrescriptions(patientId, enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.patientPrescriptions(patientId),
+    queryFn: async () => {
+      const { data } = await clinicalService.listPrescriptions(patientId);
+      return unwrapList(data);
+    },
+    enabled: Boolean(patientId) && enabled,
+  });
+}
+
+export function useCreatePrescription(patientId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data) => clinicalService.createPrescription(patientId, data),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.patientPrescriptions(patientId) }),
+  });
+}
+
+export function useUpdatePrescription(patientId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) => clinicalService.updatePrescription(patientId, id, data),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.patientPrescriptions(patientId) }),
+  });
+}
+
+export function useDeletePrescription(patientId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => clinicalService.deletePrescription(patientId, id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.patientPrescriptions(patientId) }),
+  });
+}
+
+export function useScheduleOrthodonticNext(patientId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => clinicalService.scheduleOrthodonticNext(patientId, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.patientOrthodontic(patientId) });
+      queryClient.invalidateQueries({ queryKey: ['staff-appointments'] });
+    },
+  });
+}

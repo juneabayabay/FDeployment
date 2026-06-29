@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
             {loading ? 'Resetting...' : 'Reset password'}
           </button>
           <p className="text-center text-sm">
-            <Link to="/" className="text-sky-600">← Back to patient login</Link>
+            <Link to="/login" className="text-sky-600">← Back to patient login</Link>
           </p>
         </div>
       </form>

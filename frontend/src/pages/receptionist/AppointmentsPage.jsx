@@ -17,7 +17,7 @@ import { useStaffPaths } from '../../hooks/useStaffPaths';
 import { APPOINTMENT_STATUS_FILTERS } from '../../utils/constants';
 import AppointmentParticipants from '../../components/appointments/AppointmentParticipants';
 import { formatDate, formatPrice, formatTime, parseApiError } from '../../utils/formatters';
-import { getStatusBadgeClass, getStatusLabel } from '../../utils/appointmentStatus';
+import { getStatusBadgeClass, getStatusLabel, getBookingSourceLabel, getBookingSourceBadgeClass } from '../../utils/appointmentStatus';
 
 const STATUS_OPTIONS = [
   'pending',
@@ -109,6 +109,18 @@ export default function AppointmentsPage() {
           {getStatusLabel(row.status)}
         </span>
       ),
+    },
+    {
+      key: 'source',
+      label: 'Source',
+      render: (row) =>
+        row.booking_source && row.booking_source !== 'online' ? (
+          <span className={`badge ${getBookingSourceBadgeClass(row.booking_source)}`}>
+            {getBookingSourceLabel(row.booking_source)}
+          </span>
+        ) : (
+          '—'
+        ),
     },
     {
       key: 'actions',

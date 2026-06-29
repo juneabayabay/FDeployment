@@ -9,6 +9,7 @@ from .views import (
     ClinicInfoView,
     CompatibleSlotsView,
     ProcedureListView,
+    ProcedurePackageListView,
     WaitingListLeaveView,
     WaitingListView,
 )
@@ -17,6 +18,7 @@ from .views_staff import (
     StaffAppointmentDetailView,
     StaffAppointmentListCreateView,
     StaffAppointmentRescheduleView,
+    StaffNextAvailableSlotView,
     StaffScheduleView,
     StaffWaitingListBookView,
     StaffWaitingListDeactivateView,
@@ -28,10 +30,16 @@ app_name = "appointments"
 urlpatterns = [
     path("clinic-info/", ClinicInfoView.as_view(), name="clinic-info"),
     path("procedures/", ProcedureListView.as_view(), name="procedures"),
+    path("procedure-packages/", ProcedurePackageListView.as_view(), name="procedure-packages"),
     path("slots/", AvailableSlotsView.as_view(), name="slots"),
     path("slots/compatible/", CompatibleSlotsView.as_view(), name="slots-compatible"),
     # Staff routes (must precede <int:pk>/ patterns)
     path("staff/schedule/", StaffScheduleView.as_view(), name="staff-schedule"),
+    path(
+        "staff/next-available-slot/",
+        StaffNextAvailableSlotView.as_view(),
+        name="staff-next-available-slot",
+    ),
     path("staff/", StaffAppointmentListCreateView.as_view(), name="staff-list-create"),
     path("staff/<int:pk>/", StaffAppointmentDetailView.as_view(), name="staff-detail"),
     path("staff/<int:pk>/cancel/", StaffAppointmentCancelView.as_view(), name="staff-cancel"),

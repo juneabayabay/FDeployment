@@ -24,4 +24,7 @@ export const staffAppointmentsService = {
 
   bookWaitingList: (id, data) =>
     httpClient.post(`/appointments/waiting-list/staff/${id}/book/`, data),
+
+  getNextAvailableSlot: (params) =>
+    httpClient.get('/appointments/staff/next-available-slot/', { params }),
 };

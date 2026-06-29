@@ -12,11 +12,11 @@ export default function NotFoundPage() {
       {looksLikePatientTypo && (
         <p className="mt-3 max-w-md text-sm text-amber-700">
           Did you mean <strong>/patient</strong> (with a &quot;t&quot;)? Patient login is at{' '}
-          <Link to="/" className="text-sky-600 underline">/</Link> — dashboard is{' '}
+          <Link to="/login" className="text-sky-600 underline">/login</Link> — dashboard is{' '}
           <Link to="/patient/dashboard" className="text-sky-600 underline">/patient/dashboard</Link>.
         </p>
       )}
-      <Link to="/" className="btn-primary mt-6">Patient login</Link>
+      <Link to="/login" className="btn-primary mt-6">Patient login</Link>
     </div>
   );
 }

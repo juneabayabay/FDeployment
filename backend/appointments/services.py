@@ -191,24 +191,77 @@ def get_procedure_duration_and_total(procedure_ids):
     return procedures, duration, total_amount
 
 
-def find_compatible_slots(procedure_ids, preferred_date=None, scan_days=21):
+def resolve_booking_package(package_id):
+    from .models import ProcedurePackage
+
+    try:
+        package = ProcedurePackage.objects.prefetch_related("procedures").get(
+            pk=package_id,
+            is_active=True,
+        )
+    except ProcedurePackage.DoesNotExist:
+        return None, None, None, None
+
+    procedures = list(package.procedures.filter(is_active=True).order_by("name"))
+    if not procedures:
+        return None, None, None, None
+
+    duration = sum(p.duration_minutes for p in procedures)
+    return package, procedures, duration, package.package_price
+
+
+def resolve_booking_selection(procedure_ids=None, package_id=None):
+    if package_id:
+        package, procedures, duration, total = resolve_booking_package(package_id)
+        if not procedures:
+            return None
+        return {
+            "package": package,
+            "procedures": procedures,
+            "procedure_ids": [p.id for p in procedures],
+            "duration_minutes": duration,
+            "total_amount": total,
+        }
+
+    procedures, duration, total = get_procedure_duration_and_total(procedure_ids or [])
+    if not procedures:
+        return None
+    return {
+        "package": None,
+        "procedures": procedures,
+        "procedure_ids": [p.id for p in procedures],
+        "duration_minutes": duration,
+        "total_amount": total,
+    }
+
+
+def find_compatible_slots(procedure_ids, preferred_date=None, scan_days=21, package_id=None):
     """
-    Auto-match appointment duration from selected procedures and return
-    compatible time slots. Scans forward from preferred_date (or today)
-    until slots are found or scan_days exhausted.
+    Auto-match appointment duration from selected procedures or package and return
+    compatible time slots.
     """
-    procedures, duration, total_amount = get_procedure_duration_and_total(procedure_ids)
-    if not procedures or duration < 1:
+    if package_id:
+        resolved = resolve_booking_selection(package_id=package_id)
+    else:
+        resolved = resolve_booking_selection(procedure_ids=procedure_ids)
+
+    if not resolved:
         return {
             "procedures": [],
             "duration_minutes": 0,
             "duration_label": _format_duration_label(0),
             "total_amount": "0",
+            "package_id": package_id,
             "date": None,
             "slots": [],
             "auto_matched": False,
-            "message": "Select at least one valid procedure.",
+            "message": "Select at least one valid procedure or package.",
         }
+
+    procedures = resolved["procedures"]
+    duration = resolved["duration_minutes"]
+    total_amount = resolved["total_amount"]
+    procedure_ids = resolved["procedure_ids"]
 
     base = {
         "procedures": [
@@ -218,6 +271,7 @@ def find_compatible_slots(procedure_ids, preferred_date=None, scan_days=21):
         "duration_minutes": duration,
         "duration_label": _format_duration_label(duration),
         "total_amount": str(total_amount),
+        "package_id": package_id,
         "auto_matched": True,
     }
 
@@ -277,4 +331,23 @@ def find_compatible_slots(procedure_ids, preferred_date=None, scan_days=21):
         "slots": slots,
         "daily_full": False,
         "message": message,
+    }
+
+
+def get_next_available_slot(appointment_date: date, duration_minutes: int):
+    """Return the first available slot on a given date, respecting clinic rules."""
+    if duration_minutes < 1:
+        return None
+    if not is_clinic_day(appointment_date):
+        return None
+    slots = generate_time_slots(appointment_date, duration_minutes)
+    if not slots:
+        return None
+    first = slots[0]
+    return {
+        "date": appointment_date.isoformat(),
+        "start_time": first["start_time"],
+        "end_time": first["end_time"],
+        "duration_minutes": duration_minutes,
+        "duration_label": _format_duration_label(duration_minutes),
     }

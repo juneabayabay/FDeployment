@@ -23,6 +23,16 @@ export function useProcedures() {
   });
 }
 
+export function useProcedurePackages() {
+  return useQuery({
+    queryKey: QUERY_KEYS.procedurePackages,
+    queryFn: async () => {
+      const { data } = await appointmentsService.getProcedurePackages();
+      return data;
+    },
+  });
+}
+
 export function useAppointments(status) {
   return useQuery({
     queryKey: QUERY_KEYS.appointments(status),
@@ -33,14 +43,18 @@ export function useAppointments(status) {
   });
 }
 
-export function useCompatibleSlots(procedureIds, date) {
+export function useCompatibleSlots(procedureIds, date, packageId = null) {
   return useQuery({
-    queryKey: QUERY_KEYS.compatibleSlots(procedureIds, date),
+    queryKey: QUERY_KEYS.compatibleSlots(procedureIds, date, packageId),
     queryFn: async () => {
-      const { data } = await appointmentsService.getCompatibleSlots(procedureIds, date);
+      const { data } = await appointmentsService.getCompatibleSlots(
+        procedureIds,
+        date,
+        packageId
+      );
       return data;
     },
-    enabled: procedureIds.length > 0,
+    enabled: procedureIds.length > 0 || Boolean(packageId),
   });
 }
 

@@ -1,0 +1,323 @@
+/* Unified staff login styles — Admin, Receptionist, Dentist */
+
+.admin-auth-page,
+.receptionist-auth-page,
+.dentist-auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--color-bg);
+}
+
+.admin-auth-card,
+.receptionist-auth-card,
+.dentist-auth-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 2rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-auth-header,
+.receptionist-auth-header,
+.dentist-auth-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-auth-shield,
+.receptionist-auth-icon,
+.dentist-auth-tooth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-primary);
+  color: white;
+  font-size: 1.25rem;
+}
+
+.admin-auth-brand-text,
+.receptionist-auth-brand-text,
+.dentist-auth-brand-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.admin-auth-brand-text span,
+.receptionist-auth-brand-text span,
+.dentist-auth-brand-text span {
+  color: var(--color-primary);
+}
+
+.admin-auth-badge,
+.receptionist-auth-badge,
+.dentist-auth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+}
+
+.admin-auth-title,
+.receptionist-auth-title,
+.dentist-auth-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.admin-auth-subhead,
+.receptionist-auth-subhead,
+.dentist-auth-subhead {
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.admin-auth-field,
+.receptionist-auth-field,
+.dentist-auth-field {
+  margin-bottom: 1rem;
+}
+
+.admin-auth-label,
+.receptionist-auth-label,
+.dentist-auth-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.admin-auth-input-wrap,
+.receptionist-auth-input-wrap,
+.dentist-auth-input-wrap {
+  position: relative;
+}
+
+.admin-auth-input-icon,
+.receptionist-auth-input-icon,
+.dentist-auth-input-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.admin-auth-input,
+.receptionist-auth-input,
+.dentist-auth-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.admin-auth-input:focus,
+.receptionist-auth-input:focus,
+.dentist-auth-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.12);
+}
+
+.admin-auth-input:disabled,
+.receptionist-auth-input:disabled,
+.dentist-auth-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-auth-input--password,
+.receptionist-auth-input--password,
+.dentist-auth-input--password {
+  padding-right: 2.5rem;
+}
+
+.admin-auth-toggle,
+.receptionist-auth-toggle,
+.dentist-auth-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.25rem;
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.admin-auth-toggle:hover:not(:disabled),
+.receptionist-auth-toggle:hover:not(:disabled),
+.dentist-auth-toggle:hover:not(:disabled) {
+  color: var(--color-primary);
+}
+
+.admin-auth-forgot,
+.receptionist-auth-forgot,
+.dentist-auth-forgot {
+  margin-bottom: 1rem;
+  text-align: right;
+}
+
+.admin-auth-forgot a,
+.receptionist-auth-forgot a,
+.dentist-auth-forgot a {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.admin-auth-forgot a:hover,
+.receptionist-auth-forgot a:hover,
+.dentist-auth-forgot a:hover {
+  text-decoration: underline;
+}
+
+.admin-auth-btn,
+.receptionist-auth-btn,
+.dentist-auth-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.admin-auth-btn:hover:not(:disabled),
+.receptionist-auth-btn:hover:not(:disabled),
+.dentist-auth-btn:hover:not(:disabled) {
+  background: var(--color-secondary);
+}
+
+.admin-auth-btn:disabled,
+.receptionist-auth-btn:disabled,
+.dentist-auth-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.admin-auth-btn-spinner,
+.receptionist-auth-btn-spinner,
+.dentist-auth-btn-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: staffAuthSpin 0.7s linear infinite;
+}
+
+.admin-auth-divider,
+.receptionist-auth-divider,
+.dentist-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.admin-auth-divider::before,
+.admin-auth-divider::after,
+.receptionist-auth-divider::before,
+.receptionist-auth-divider::after,
+.dentist-auth-divider::before,
+.dentist-auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.dentist-auth-divider-icon {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+.admin-auth-alert,
+.receptionist-auth-alert,
+.dentist-auth-alert {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  border-radius: var(--radius-md);
+}
+
+.admin-auth-alert--error,
+.receptionist-auth-alert--error,
+.dentist-auth-alert--error {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+@keyframes staffAuthSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-auth-page,
+  .receptionist-auth-page,
+  .dentist-auth-page {
+    padding: 1rem;
+  }
+
+  .admin-auth-card,
+  .receptionist-auth-card,
+  .dentist-auth-card {
+    padding: 1.5rem;
+  }
+}

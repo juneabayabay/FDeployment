@@ -16,6 +16,7 @@ import ReceptionistBookPage from '../pages/receptionist/BookAppointmentPage';
 import ReceptionistBillingPage from '../pages/receptionist/BillingPage';
 import ReceptionistSchedulePage from '../pages/receptionist/SchedulePage';
 import ReceptionistWaitingListPage from '../pages/receptionist/WaitingListPage';
+import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
 import AdminDentistDirectoryPage from '../pages/admin/AdminDentistDirectoryPage';
 import AdminPatientDetailPage from '../pages/admin/AdminPatientDetailPage';
 import AdminReportsPage from '../pages/admin/AdminReportsPage';

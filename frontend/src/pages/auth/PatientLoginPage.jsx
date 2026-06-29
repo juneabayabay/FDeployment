@@ -132,6 +132,9 @@ export default function PatientLoginPage() {
       <p className="patient-auth-switch">
         New patient? <Link to="/register">Create an account</Link>
       </p>
+      <Link to="/" className="patient-auth-back">
+        ← Back to home
+      </Link>
     </PatientAuthShell>
   );
 }

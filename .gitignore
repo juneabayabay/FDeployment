@@ -7,16 +7,12 @@
 *.env
 frontend/.env
 backend/.env
-barnabas-dental-system/frontend/.env
-barnabas-dental-system/backend/.env
 
 # Node.js
 node_modules/
 dist/
 frontend/node_modules/
 frontend/dist/
-barnabas-dental-system/frontend/node_modules/
-barnabas-dental-system/frontend/dist/
 
 # Python
 __pycache__/
@@ -55,13 +51,10 @@ staticfiles/
 media/
 backend/staticfiles/
 backend/media/
-barnabas-dental-system/backend/staticfiles/
-barnabas-dental-system/backend/media/
 
 # Vite / frontend build artifacts
 .vite/
 frontend/.vite/
-barnabas-dental-system/frontend/.vite/
 
 # OS-generated files
 .DS_Store

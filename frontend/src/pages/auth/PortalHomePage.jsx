@@ -14,6 +14,9 @@ export default function PortalHomePage() {
           </span>
           <h1 className="mt-3 text-3xl font-bold text-slate-900">{APP_NAME}</h1>
           <p className="mt-2 text-slate-600">Preview every login portal — pick one to open its sign-in page</p>
+          <p className="mt-2 text-sm">
+            <Link to="/" className="text-sky-600 hover:text-sky-800">← Public homepage</Link>
+          </p>
         </div>
 
         {patientPortal && (
@@ -52,7 +55,7 @@ export default function PortalHomePage() {
         <p className="mt-8 text-center text-sm text-slate-600">
           New patient? <Link to="/register" className="text-sky-600 hover:text-sky-800">Register here</Link>
           {' · '}
-          <Link to="/" className="text-sky-600 hover:text-sky-800">Patient login</Link>
+          <Link to="/login" className="text-sky-600 hover:text-sky-800">Patient login</Link>
         </p>
       </div>
     </div>

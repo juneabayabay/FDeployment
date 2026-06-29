@@ -8,7 +8,7 @@ from notifications.services import notify_appointment_cancelled, notify_appointm
 
 from users.models import Role, User
 
-from .models import Appointment, Procedure, WaitingListEntry
+from .models import Appointment, Procedure, ProcedurePackage, WaitingListEntry
 from .services import (
     SlotUnavailableError,
     assert_slot_available,
@@ -17,6 +17,7 @@ from .services import (
     get_slots_meta,
     is_clinic_day,
     is_daily_capacity_full,
+    resolve_booking_selection,
 )
 
 
@@ -38,6 +39,26 @@ class ProcedureSerializer(serializers.ModelSerializer):
     def get_duration_hours(self, obj):
         hours = obj.duration_minutes / 60
         return int(hours) if hours == int(hours) else hours
+
+
+class ProcedurePackageSerializer(serializers.ModelSerializer):
+    procedures = ProcedureSerializer(many=True, read_only=True)
+    total_duration_minutes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProcedurePackage
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "description",
+            "procedures",
+            "package_price",
+            "total_duration_minutes",
+        ]
+
+    def get_total_duration_minutes(self, obj):
+        return obj.total_duration_minutes
 
 
 class AppointmentUserSummarySerializer(serializers.ModelSerializer):
@@ -96,6 +117,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
             "end_time",
             "status",
             "booking_type",
+            "booking_source",
             "procedures",
             "procedure_ids",
             "dentist",
@@ -124,11 +146,18 @@ class AppointmentCreateSerializer(serializers.Serializer):
     start_time = serializers.TimeField()
     procedure_ids = serializers.ListField(
         child=serializers.IntegerField(),
-        min_length=1,
+        required=False,
+        default=list,
     )
+    package_id = serializers.IntegerField(required=False, allow_null=True)
     booking_type = serializers.ChoiceField(
         choices=Appointment.BookingType.choices,
         default=Appointment.BookingType.PENCIL,
+    )
+    booking_source = serializers.ChoiceField(
+        choices=Appointment.BookingSource.choices,
+        default=Appointment.BookingSource.ONLINE,
+        required=False,
     )
     notes = serializers.CharField(required=False, allow_blank=True, default="")
     dentist_id = serializers.IntegerField(required=False, allow_null=True)
@@ -137,6 +166,28 @@ class AppointmentCreateSerializer(serializers.Serializer):
         return _validate_dentist_user(value)
 
     def validate(self, attrs):
+        package_id = attrs.get("package_id")
+        procedure_ids = attrs.get("procedure_ids") or []
+
+        if package_id and procedure_ids:
+            raise serializers.ValidationError(
+                "Provide either package_id or procedure_ids, not both."
+            )
+        if not package_id and not procedure_ids:
+            raise serializers.ValidationError(
+                "Select a package or at least one procedure."
+            )
+
+        resolved = resolve_booking_selection(
+            procedure_ids=procedure_ids if not package_id else None,
+            package_id=package_id,
+        )
+        if not resolved:
+            field = "package_id" if package_id else "procedure_ids"
+            raise serializers.ValidationError(
+                {field: "One or more items are invalid or inactive."}
+            )
+
         appt_date = attrs["appointment_date"]
         if appt_date < timezone.localdate():
             raise serializers.ValidationError(
@@ -151,18 +202,8 @@ class AppointmentCreateSerializer(serializers.Serializer):
                 {"appointment_date": "This day is fully booked. Join the waiting list."}
             )
 
-        procedures = list(
-            Procedure.objects.filter(
-                id__in=attrs["procedure_ids"],
-                is_active=True,
-            )
-        )
-        if len(procedures) != len(attrs["procedure_ids"]):
-            raise serializers.ValidationError(
-                {"procedure_ids": "One or more procedures are invalid."}
-            )
-
-        duration = sum(p.duration_minutes for p in procedures)
+        procedures = resolved["procedures"]
+        duration = resolved["duration_minutes"]
         start_time = attrs["start_time"]
         slots = generate_time_slots(appt_date, duration)
         start_str = start_time.strftime("%H:%M") if isinstance(start_time, time) else start_time
@@ -177,7 +218,7 @@ class AppointmentCreateSerializer(serializers.Serializer):
         )
         attrs["procedures"] = procedures
         attrs["total_duration_minutes"] = duration
-        attrs["total_amount"] = sum(p.price for p in procedures)
+        attrs["total_amount"] = resolved["total_amount"]
         attrs["end_time"] = end_dt.time()
         return attrs
 
@@ -188,6 +229,9 @@ class AppointmentCreateSerializer(serializers.Serializer):
         validated_data.pop("procedure_ids", None)
         dentist = validated_data.pop("dentist_id", None)
         booking_type = validated_data.pop("booking_type")
+        booking_source = validated_data.pop(
+            "booking_source", Appointment.BookingSource.ONLINE
+        )
         total_duration = validated_data.pop("total_duration_minutes")
         total_amount = validated_data.pop("total_amount")
         end_time = validated_data.pop("end_time")
@@ -209,6 +253,7 @@ class AppointmentCreateSerializer(serializers.Serializer):
             patient=user,
             dentist=dentist,
             booking_type=booking_type,
+            booking_source=booking_source,
             status=status,
             total_duration_minutes=total_duration,
             total_amount=total_amount,
@@ -306,6 +351,7 @@ class WaitingListSerializer(serializers.ModelSerializer):
         write_only=True,
         required=False,
     )
+    is_suggested = serializers.SerializerMethodField()
 
     class Meta:
         model = WaitingListEntry
@@ -316,9 +362,14 @@ class WaitingListSerializer(serializers.ModelSerializer):
             "procedure_ids",
             "notes",
             "is_active",
+            "suggested_for_date",
+            "is_suggested",
             "created_at",
         ]
-        read_only_fields = ["id", "is_active", "created_at"]
+        read_only_fields = ["id", "is_active", "suggested_for_date", "is_suggested", "created_at"]
+
+    def get_is_suggested(self, obj):
+        return obj.suggested_for_date is not None
 
 
 class AvailableSlotsSerializer(serializers.Serializer):

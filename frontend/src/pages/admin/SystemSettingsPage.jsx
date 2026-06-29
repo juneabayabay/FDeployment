@@ -5,6 +5,7 @@ import AlertBanner from '../../components/common/AlertBanner';
 import QueryState from '../../components/common/QueryState';
 import DataTable from '../../components/common/DataTable';
 import ProcedureCard from '../../components/staff/ProcedureCard';
+import PackageCard from '../../components/staff/PackageCard';
 import {
   useClinicSettings,
   useUpdateClinicSettings,
@@ -13,6 +14,9 @@ import {
   useStaffProcedures,
   useCreateStaffProcedure,
   useUpdateStaffProcedure,
+  useStaffProcedurePackages,
+  useCreateStaffProcedurePackage,
+  useUpdateStaffProcedurePackage,
 } from '../../hooks/useSettings';
 import { usePermission } from '../../hooks/usePermission';
 import { parseApiError, formatPrice } from '../../utils/formatters';
@@ -23,16 +27,20 @@ export default function SystemSettingsPage() {
   const [error, setError] = useState('');
   const [settingsDraft, setSettingsDraft] = useState({});
   const [procForm, setProcForm] = useState(null);
+  const [pkgForm, setPkgForm] = useState(null);
   const [emailForm, setEmailForm] = useState({ test_email: '' });
   const { can } = usePermission();
 
   const settings = useClinicSettings();
   const emailSettings = useEmailSettings();
   const procedures = useStaffProcedures();
+  const packages = useStaffProcedurePackages();
   const updateSettings = useUpdateClinicSettings();
   const testEmailSettings = useTestEmailSettings();
   const createProc = useCreateStaffProcedure();
   const updateProc = useUpdateStaffProcedure();
+  const createPkg = useCreateStaffProcedurePackage();
+  const updatePkg = useUpdateStaffProcedurePackage();
 
   const canManage = can('settings.manage');
 
@@ -90,6 +98,49 @@ export default function SystemSettingsPage() {
     }
   };
 
+  const handleSavePackage = async (e) => {
+    e.preventDefault();
+    setError('');
+    const payload = {
+      ...pkgForm,
+      procedure_ids: (pkgForm.procedure_ids || []).map(Number),
+      package_price: pkgForm.package_price,
+    };
+    try {
+      if (pkgForm.id) {
+        await updatePkg.mutateAsync({ id: pkgForm.id, data: payload });
+      } else {
+        await createPkg.mutateAsync(payload);
+      }
+      setMessage('Package saved.');
+      setPkgForm(null);
+    } catch (err) {
+      setError(parseApiError(err));
+    }
+  };
+
+  const handleDeactivatePackage = async (pkg) => {
+    if (!window.confirm(`Deactivate package "${pkg.name}"?`)) return;
+    setError('');
+    try {
+      await updatePkg.mutateAsync({ id: pkg.id, data: { is_active: false } });
+      setMessage('Package deactivated.');
+    } catch (err) {
+      setError(parseApiError(err));
+    }
+  };
+
+  const togglePackageProcedure = (procId) => {
+    const id = Number(procId);
+    setPkgForm((prev) => {
+      const ids = prev.procedure_ids || [];
+      return {
+        ...prev,
+        procedure_ids: ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
+      };
+    });
+  };
+
   const procColumns = [
     { key: 'name', label: 'Name' },
     { key: 'category', label: 'Category' },
@@ -134,7 +185,7 @@ export default function SystemSettingsPage() {
       <ErrorMessage message={error} />
 
       <div className="flex flex-wrap gap-2">
-        {['clinic', 'email', 'procedures'].map((t) => (
+        {['clinic', 'email', 'procedures', 'packages'].map((t) => (
           <button
             key={t}
             type="button"
@@ -274,6 +325,149 @@ export default function SystemSettingsPage() {
                   canManage={canManage}
                   onEdit={setProcForm}
                   onDeactivate={handleDeactivateProcedure}
+                />
+              )}
+            />
+          </QueryState>
+        </>
+      )}
+
+      {tab === 'packages' && (
+        <>
+          {canManage && (
+            <button
+              type="button"
+              className="btn-primary btn-sm"
+              onClick={() =>
+                setPkgForm({
+                  name: '',
+                  slug: '',
+                  description: '',
+                  package_price: '0',
+                  procedure_ids: [],
+                  is_active: true,
+                })
+              }
+            >
+              + Add package
+            </button>
+          )}
+          {pkgForm && (
+            <form onSubmit={handleSavePackage} className="card space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {['name', 'slug', 'package_price'].map((f) => (
+                  <label key={f} className="label capitalize">
+                    {f.replace('_', ' ')}
+                    <input
+                      className="input"
+                      type={f === 'package_price' ? 'number' : 'text'}
+                      value={pkgForm[f]}
+                      onChange={(e) => setPkgForm((p) => ({ ...p, [f]: e.target.value }))}
+                      required={f !== 'slug'}
+                    />
+                  </label>
+                ))}
+                <label className="label sm:col-span-2">
+                  Description
+                  <textarea
+                    className="input"
+                    value={pkgForm.description}
+                    onChange={(e) => setPkgForm((p) => ({ ...p, description: e.target.value }))}
+                    rows={2}
+                  />
+                </label>
+              </div>
+              <div>
+                <p className="mb-2 text-sm font-medium text-slate-700">Included procedures</p>
+                <div className="flex flex-wrap gap-2">
+                  {(procedures.data || [])
+                    .filter((p) => p.is_active)
+                    .map((proc) => {
+                      const selected = (pkgForm.procedure_ids || []).includes(Number(proc.id));
+                      return (
+                        <button
+                          key={proc.id}
+                          type="button"
+                          className={`rounded-lg border px-3 py-1 text-sm ${
+                            selected
+                              ? 'border-violet-500 bg-violet-50 text-violet-900'
+                              : 'border-slate-200 bg-white'
+                          }`}
+                          onClick={() => togglePackageProcedure(proc.id)}
+                        >
+                          {selected ? '✓' : '+'} {proc.name}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" className="btn-primary btn-sm">Save</button>
+                <button type="button" className="btn-ghost btn-sm" onClick={() => setPkgForm(null)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+          <QueryState isLoading={packages.isLoading} isError={packages.isError} error={packages.error}>
+            <DataTable
+              columns={[
+                { key: 'name', label: 'Name' },
+                {
+                  key: 'procedures',
+                  label: 'Procedures',
+                  render: (r) => (r.procedures || []).map((p) => p.name).join(', ') || '—',
+                },
+                { key: 'duration', label: 'Duration (min)', render: (r) => r.total_duration_minutes },
+                { key: 'price', label: 'Package price', render: (r) => formatPrice(r.package_price) },
+                { key: 'active', label: 'Active', render: (r) => (r.is_active ? 'Yes' : 'No') },
+                ...(canManage
+                  ? [
+                      {
+                        key: 'actions',
+                        label: '',
+                        render: (r) => (
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              className="btn-outline btn-sm"
+                              onClick={() =>
+                                setPkgForm({
+                                  ...r,
+                                  procedure_ids: (r.procedures || []).map((p) => p.id),
+                                })
+                              }
+                            >
+                              Edit
+                            </button>
+                            {r.is_active && (
+                              <button
+                                type="button"
+                                className="btn-danger btn-sm"
+                                onClick={() => handleDeactivatePackage(r)}
+                              >
+                                Deactivate
+                              </button>
+                            )}
+                          </div>
+                        ),
+                      },
+                    ]
+                  : []),
+              ]}
+              rows={packages.data || []}
+              emptyMessage="No packages defined."
+              renderMobileCard={(r) => (
+                <PackageCard
+                  package={r}
+                  canManage={canManage}
+                  onEdit={(pkg) =>
+                    setPkgForm({
+                      ...pkg,
+                      procedure_ids: (pkg.procedures || []).map((p) => p.id),
+                    })
+                  }
+                  onDeactivate={handleDeactivatePackage}
                 />
               )}
             />

@@ -143,6 +143,29 @@ class DentistProfile(models.Model):
         return name
 
 
+class PatientProfile(models.Model):
+    """Demographics and medical history for patient users."""
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="patient_profile",
+    )
+    date_of_birth = models.DateField(null=True, blank=True)
+    medical_history = models.TextField(blank=True)
+    allergies = models.TextField(blank=True)
+    emergency_contact_name = models.CharField(max_length=150, blank=True)
+    emergency_contact_phone = models.CharField(max_length=20, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "patient_profiles"
+
+    def __str__(self):
+        return f"Profile — {self.user.email}"
+
+
 class Role(models.Model):
     ADMIN = "admin"
     DENTIST = "dentist"

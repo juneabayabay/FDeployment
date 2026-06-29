@@ -81,3 +81,35 @@ export function useUpdateStaffProcedure() {
     },
   });
 }
+
+export function useStaffProcedurePackages() {
+  return useQuery({
+    queryKey: QUERY_KEYS.staffProcedurePackages,
+    queryFn: async () => {
+      const { data } = await settingsService.getProcedurePackages();
+      return unwrapList(data);
+    },
+  });
+}
+
+export function useCreateStaffProcedurePackage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data) => settingsService.createProcedurePackage(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.staffProcedurePackages });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.procedurePackages });
+    },
+  });
+}
+
+export function useUpdateStaffProcedurePackage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }) => settingsService.updateProcedurePackage(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.staffProcedurePackages });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.procedurePackages });
+    },
+  });
+}

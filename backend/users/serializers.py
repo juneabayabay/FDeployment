@@ -1,8 +1,43 @@
+from datetime import date
+
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import ClinicPermission, Role, RolePermission, User, UserRole
+from .models import ClinicPermission, PatientProfile, Role, RolePermission, User, UserRole
+
+PATIENT_PROFILE_FIELD_NAMES = [
+    "date_of_birth",
+    "medical_history",
+    "allergies",
+    "emergency_contact_name",
+    "emergency_contact_phone",
+]
+
+
+def compute_age(date_of_birth):
+    if not date_of_birth:
+        return None
+    today = date.today()
+    return today.year - date_of_birth.year - (
+        (today.month, today.day) < (date_of_birth.month, date_of_birth.day)
+    )
+
+
+def get_patient_profile(obj):
+    try:
+        return obj.patient_profile
+    except PatientProfile.DoesNotExist:
+        return None
+
+
+def upsert_patient_profile(user, profile_data):
+    if not profile_data or not user.is_patient_user:
+        return
+    profile, _ = PatientProfile.objects.get_or_create(user=user)
+    for field, value in profile_data.items():
+        setattr(profile, field, value)
+    profile.save()
 
 
 class ClinicPermissionSerializer(serializers.ModelSerializer):
@@ -112,6 +147,12 @@ class UserSerializer(serializers.ModelSerializer):
     )
     roles = serializers.SerializerMethodField()
     avatar_url = serializers.SerializerMethodField()
+    date_of_birth = serializers.SerializerMethodField()
+    medical_history = serializers.SerializerMethodField()
+    allergies = serializers.SerializerMethodField()
+    emergency_contact_name = serializers.SerializerMethodField()
+    emergency_contact_phone = serializers.SerializerMethodField()
+    age = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -124,6 +165,12 @@ class UserSerializer(serializers.ModelSerializer):
             "full_name",
             "phone",
             "avatar_url",
+            "date_of_birth",
+            "medical_history",
+            "allergies",
+            "emergency_contact_name",
+            "emergency_contact_phone",
+            "age",
             "is_active",
             "is_staff",
             "is_superuser",
@@ -158,12 +205,41 @@ class UserSerializer(serializers.ModelSerializer):
         roles = Role.objects.filter(user_roles__user=obj)
         return RoleSerializer(roles, many=True).data
 
+    def get_date_of_birth(self, obj):
+        profile = get_patient_profile(obj)
+        return profile.date_of_birth if profile else None
+
+    def get_medical_history(self, obj):
+        profile = get_patient_profile(obj)
+        return profile.medical_history if profile else ""
+
+    def get_allergies(self, obj):
+        profile = get_patient_profile(obj)
+        return profile.allergies if profile else ""
+
+    def get_emergency_contact_name(self, obj):
+        profile = get_patient_profile(obj)
+        return profile.emergency_contact_name if profile else ""
+
+    def get_emergency_contact_phone(self, obj):
+        profile = get_patient_profile(obj)
+        return profile.emergency_contact_phone if profile else ""
+
+    def get_age(self, obj):
+        profile = get_patient_profile(obj)
+        return compute_age(profile.date_of_birth) if profile else None
+
 
 class PublicRegisterSerializer(serializers.ModelSerializer):
     """Public patient self-registration — always assigns the `user` role."""
 
     password = serializers.CharField(write_only=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True)
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    medical_history = serializers.CharField(required=False, allow_blank=True)
+    allergies = serializers.CharField(required=False, allow_blank=True)
+    emergency_contact_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
+    emergency_contact_phone = serializers.CharField(required=False, allow_blank=True, max_length=20)
 
     class Meta:
         model = User
@@ -175,6 +251,11 @@ class PublicRegisterSerializer(serializers.ModelSerializer):
             "phone",
             "password",
             "password_confirm",
+            "date_of_birth",
+            "medical_history",
+            "allergies",
+            "emergency_contact_name",
+            "emergency_contact_phone",
         ]
 
     def validate(self, attrs):
@@ -185,6 +266,11 @@ class PublicRegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        profile_data = {}
+        for field in PATIENT_PROFILE_FIELD_NAMES:
+            if field in validated_data:
+                profile_data[field] = validated_data.pop(field)
+
         password = validated_data.pop("password")
         role = Role.objects.get(slug=Role.USER)
         user = User.objects.create_user(
@@ -193,6 +279,7 @@ class PublicRegisterSerializer(serializers.ModelSerializer):
             **validated_data,
         )
         UserRole.objects.create(user=user, role=role)
+        upsert_patient_profile(user, profile_data)
         return user
 
 
@@ -247,6 +334,12 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
+    date_of_birth = serializers.DateField(required=False, allow_null=True)
+    medical_history = serializers.CharField(required=False, allow_blank=True)
+    allergies = serializers.CharField(required=False, allow_blank=True)
+    emergency_contact_name = serializers.CharField(required=False, allow_blank=True, max_length=150)
+    emergency_contact_phone = serializers.CharField(required=False, allow_blank=True, max_length=20)
+
     class Meta:
         model = User
         fields = [
@@ -254,7 +347,22 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone",
+            "date_of_birth",
+            "medical_history",
+            "allergies",
+            "emergency_contact_name",
+            "emergency_contact_phone",
         ]
+
+    def update(self, instance, validated_data):
+        profile_data = {}
+        for field in PATIENT_PROFILE_FIELD_NAMES:
+            if field in validated_data:
+                profile_data[field] = validated_data.pop(field)
+
+        instance = super().update(instance, validated_data)
+        upsert_patient_profile(instance, profile_data)
+        return instance
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -280,13 +388,34 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = "email"
 
     def validate(self, attrs):
-        data = super().validate(attrs)
+        identifier = (attrs.get("email") or attrs.get("username") or "").strip()
+        password = attrs.get("password")
 
-        if self.user.deleted_at is not None:
+        if not identifier or not password:
+            raise serializers.ValidationError("Email/username and password are required.")
+
+        user = (
+            User.objects.filter(deleted_at__isnull=True, email__iexact=identifier).first()
+            or User.objects.filter(
+                deleted_at__isnull=True, username__iexact=identifier
+            ).first()
+        )
+
+        if not user or not user.check_password(password):
+            raise serializers.ValidationError(
+                "No active account found with the given credentials."
+            )
+
+        if not user.is_active:
             raise serializers.ValidationError("User account is inactive.")
 
-        data["user"] = UserSerializer(self.user).data
-        return data
+        self.user = user
+        refresh = self.get_token(user)
+        return {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "user": UserSerializer(self.user, context=self.context).data,
+        }
 
     @classmethod
     def get_token(cls, user):

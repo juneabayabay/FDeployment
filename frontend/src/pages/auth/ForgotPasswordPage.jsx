@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FaEnvelope } from 'react-icons/fa';
+import PatientAuthButton from '../../components/auth/patient/PatientAuthButton';
+import PatientAuthField from '../../components/auth/patient/PatientAuthField';
+import PatientAuthShell from '../../components/auth/patient/PatientAuthShell';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import { authService } from '../../services';
-import { APP_NAME } from '../../utils/constants';
 
 const GMAIL_SETUP_STEPS = [
   'Open https://myaccount.google.com/apppasswords (2-Step Verification must be on).',
@@ -42,66 +45,69 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-sky-100 p-4">
-      <form className="card w-full max-w-md" onSubmit={handleSubmit}>
-        <h1 className="text-2xl font-bold text-slate-900">{APP_NAME}</h1>
-        <p className="mt-2 font-medium text-slate-700">Forgot your password?</p>
-        <p className="text-sm text-slate-500">
-          Enter your email. We will send a confirmation link to your Gmail inbox — only click it if you requested a reset.
-        </p>
-        <div className="mt-6 space-y-4">
-          <ErrorMessage message={error} />
-          {showSetup && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-              <p className="font-semibold">Gmail setup (one-time, local dev)</p>
-              <ol className="mt-2 list-decimal space-y-1 pl-4">
-                {GMAIL_SETUP_STEPS.map((step) => (
-                  <li key={step}>{step}</li>
-                ))}
-              </ol>
-            </div>
-          )}
-          {message && (
-            <div className="alert-success" role="status">
-              <p className="font-semibold">Check your Gmail</p>
-              <p className="mt-1 text-sm">{message}</p>
-            </div>
-          )}
-          <label className="label">
-            Email
-            <input
-              className="input"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={!!message}
-            />
-          </label>
-          <button type="submit" className="btn-primary w-full" disabled={loading || !!message}>
-            {loading ? 'Sending...' : message ? 'Email sent' : 'Send confirmation email'}
-          </button>
-          {message && (
-            <p className="text-center text-sm text-slate-600">
-              Did not receive it? Check spam, wait a minute, or{' '}
-              <button
-                type="button"
-                className="text-sky-600 underline"
-                onClick={() => {
-                  setMessage('');
-                  setError('');
-                }}
-              >
-                try again
-              </button>
-              .
-            </p>
-          )}
-          <p className="text-center text-sm">
-            <Link to="/" className="text-sky-600">← Back to patient login</Link>
+    <PatientAuthShell>
+      <h1 className="patient-auth-title">Forgot your password?</h1>
+      <p className="patient-auth-subhead">
+        Enter your email. We will send a confirmation link to your Gmail inbox — only click it if
+        you requested a reset.
+      </p>
+
+      <form onSubmit={handleSubmit}>
+        <ErrorMessage message={error} />
+        {showSetup && (
+          <div className="patient-auth-alert patient-auth-alert--error mb-4">
+            <p className="font-semibold">Gmail setup (one-time, local dev)</p>
+            <ol className="mt-2 list-decimal space-y-1 pl-4 text-sm">
+              {GMAIL_SETUP_STEPS.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+          </div>
+        )}
+        {message && (
+          <div className="patient-auth-alert patient-auth-alert--success" role="status">
+            <p className="font-semibold">Check your Gmail</p>
+            <p className="mt-1 text-sm">{message}</p>
+          </div>
+        )}
+
+        <PatientAuthField
+          icon={FaEnvelope}
+          label="Email"
+          name="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+          disabled={!!message}
+        />
+
+        <PatientAuthButton loading={loading} disabled={loading || !!message}>
+          {loading ? 'Sending...' : message ? 'Email sent' : 'Send confirmation email'}
+        </PatientAuthButton>
+
+        {message && (
+          <p className="patient-auth-switch mt-4">
+            Did not receive it? Check spam, wait a minute, or{' '}
+            <button
+              type="button"
+              className="font-semibold"
+              style={{ color: 'var(--patient-teal)', background: 'none', border: 'none', cursor: 'pointer' }}
+              onClick={() => {
+                setMessage('');
+                setError('');
+              }}
+            >
+              try again
+            </button>
+            .
           </p>
-        </div>
+        )}
       </form>
-    </div>
+
+      <Link to="/login" className="patient-auth-back">
+        ← Back to patient login
+      </Link>
+    </PatientAuthShell>
   );
 }

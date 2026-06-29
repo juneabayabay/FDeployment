@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import App from './App';
 import AppErrorBoundary from './components/common/AppErrorBoundary';
 import './index.css';
+import './styles/public-pages.css';
 import './styles/patient-auth.css';
 import './styles/admin-auth.css';
 import './styles/receptionist-auth.css';

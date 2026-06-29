@@ -1,16 +1,20 @@
-import AuthParticles from './AuthParticles';
+import PublicBubbles from '../../public/PublicBubbles';
 import PatientAuthBrand from './PatientAuthBrand';
 
-export default function PatientAuthShell({ children }) {
+export default function PatientAuthShell({ children, wide = false }) {
+  const cardClass = [
+    'public-main-card',
+    'public-main-card--auth',
+    'patient-auth-card',
+    wide ? 'public-main-card--auth-wide' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className="patient-auth-page">
-      <div className="patient-auth-bubble patient-auth-bubble-1" aria-hidden />
-      <div className="patient-auth-bubble patient-auth-bubble-2" aria-hidden />
-      <div className="patient-auth-bubble patient-auth-bubble-3" aria-hidden />
-      <div className="patient-auth-bubble patient-auth-bubble-4" aria-hidden />
-      <div className="patient-auth-bubble patient-auth-bubble-5" aria-hidden />
-      <AuthParticles />
-      <div className="patient-auth-card">
+    <div className="public-page patient-auth-page">
+      <PublicBubbles />
+      <div className={cardClass}>
         <PatientAuthBrand />
         {children}
       </div>

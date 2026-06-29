@@ -11,8 +11,12 @@ from users.email_utils import (
 )
 
 from .mixins import StaffPermissionMixin
-from .models import ClinicSetting, Procedure
-from .serializers_settings import ClinicSettingSerializer, StaffProcedureSerializer
+from .models import ClinicSetting, Procedure, ProcedurePackage
+from .serializers_settings import (
+    ClinicSettingSerializer,
+    StaffProcedurePackageSerializer,
+    StaffProcedureSerializer,
+)
 
 SMTP_SETTING_KEYS = SENSITIVE_SETTING_KEYS
 
@@ -97,6 +101,32 @@ class StaffProcedureDetailView(StaffPermissionMixin, generics.RetrieveUpdateDest
     }
     serializer_class = StaffProcedureSerializer
     queryset = Procedure.objects.all()
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save(update_fields=["is_active"])
+
+
+class StaffProcedurePackageListCreateView(StaffPermissionMixin, generics.ListCreateAPIView):
+    staff_permissions = {"GET": "settings.view", "POST": "settings.manage"}
+    serializer_class = StaffProcedurePackageSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        return ProcedurePackage.objects.prefetch_related("procedures").order_by("name")
+
+
+class StaffProcedurePackageDetailView(StaffPermissionMixin, generics.RetrieveUpdateDestroyAPIView):
+    staff_permissions = {
+        "GET": "settings.view",
+        "PATCH": "settings.manage",
+        "PUT": "settings.manage",
+        "DELETE": "settings.manage",
+    }
+    serializer_class = StaffProcedurePackageSerializer
+
+    def get_queryset(self):
+        return ProcedurePackage.objects.prefetch_related("procedures")
 
     def perform_destroy(self, instance):
         instance.is_active = False

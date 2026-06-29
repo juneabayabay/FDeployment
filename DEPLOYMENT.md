@@ -9,8 +9,6 @@
 | Django API | `backend/` |
 | React frontend | `frontend/` |
 
-A legacy local copy may exist at `barnabas-dental-system/backend/` and `barnabas-dental-system/frontend/`. Those are **not** used by Render or Vercel — always deploy from the root `backend/` and `frontend/` directories.
-
 ---
 
 ## Backend (Render)
@@ -84,6 +82,17 @@ Cron services are defined in `render.yaml`. Each cron job must share `DATABASE_U
 1. Enable automated backups in the Aiven console.
 2. Migrations run on Render deploy (`preDeployCommand` + `buildCommand` fallback).
 3. For one-off tasks when Render Shell is unavailable, run commands locally against Aiven (below).
+
+### Automated backups via Aiven PostgreSQL (REQ024)
+
+Database backups are handled at the **infrastructure level** in Aiven — not inside the Django app.
+
+1. Open your Aiven project → **PostgreSQL service** → **Backups**.
+2. Enable **automated backups** (daily snapshots are the default on paid plans).
+3. Retention and restore are managed in the Aiven console (point-in-time / snapshot restore).
+4. No in-app backup UI is required; REQ024 is satisfied by this hosted configuration.
+
+For disaster recovery: create a new service or restore from backup in Aiven, then update `DATABASE_URL` on Render if the connection endpoint changes.
 
 ### Local migrate against Aiven (no Render Shell)
 
@@ -206,7 +215,7 @@ python manage.py makemigrations --check --dry-run   # expect "No changes detecte
 python manage.py test users appointments billing
 DEBUG=False SECRET_KEY=<random-50+-chars> python manage.py collectstatic --noinput
 
-# Frontend (canonical path — not barnabas-dental-system/frontend)
+# Frontend
 cd ../frontend
 npm install
 npm run build
@@ -244,5 +253,5 @@ npm run build
 | API 400/502 on deploy | `DATABASE_URL` typo (`sslmode=require` not `sslmode-require`) |
 | Frontend calls `api.example.com` | Set `VITE_API_URL` on Vercel with `/api` suffix; redeploy |
 | CORS errors | `CORS_ALLOWED_ORIGINS` must exactly match Vercel URL (`https://…`, no trailing slash) |
-| 403 on admin Create Staff | Log in at `/admin` as superuser with `admin` clinic role; use repo `frontend/`, not `barnabas-dental-system/frontend` |
+| 403 on admin Create Staff | Log in at `/admin` as superuser with `admin` clinic role |
 | Render build fails on migrate | Set `DATABASE_URL` in dashboard before triggering deploy |

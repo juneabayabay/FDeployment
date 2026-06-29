@@ -5,15 +5,19 @@ export const appointmentsService = {
 
   getProcedures: () => httpClient.get('/appointments/procedures/'),
 
+  getProcedurePackages: () => httpClient.get('/appointments/procedure-packages/'),
+
   getSlots: (date, durationMinutes) =>
     httpClient.get('/appointments/slots/', {
       params: { date, duration_minutes: durationMinutes },
     }),
 
-  getCompatibleSlots: (procedureIds, date = null) =>
+  getCompatibleSlots: (procedureIds, date = null, packageId = null) =>
     httpClient.get('/appointments/slots/compatible/', {
       params: {
-        procedure_ids: procedureIds.join(','),
+        ...(packageId
+          ? { package_id: packageId }
+          : { procedure_ids: procedureIds.join(',') }),
         ...(date ? { date } : {}),
       },
     }),

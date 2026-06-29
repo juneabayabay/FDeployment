@@ -1,11 +1,15 @@
 import AppointmentCalendar from './AppointmentCalendar';
 import ProcedureSelector from './ProcedureSelector';
+import PackageSelector from './PackageSelector';
 import TimeSlotPicker from './TimeSlotPicker';
 
 export default function BookingForm({
   procedures,
+  packages = [],
   selectedProcedures,
   onToggleProcedure,
+  selectedPackageId,
+  onSelectPackage,
   selectedDate,
   onSelectDate,
   slots,
@@ -25,6 +29,9 @@ export default function BookingForm({
   const selectedProcedureList = procedures.filter((p) =>
     selectedProcedures.includes(Number(p.id))
   );
+  const selectedPackage = packages.find(
+    (p) => Number(p.id) === Number(selectedPackageId)
+  );
 
   return (
     <div className="space-y-6">
@@ -33,16 +40,29 @@ export default function BookingForm({
           <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-sky-600 text-sm text-white">
             1
           </span>
-          Select Procedures
+          Select Package or Procedures
         </h2>
         <p className="mb-4 text-sm text-slate-500">
-          Add one or more procedures. Total time is calculated automatically.
+          Choose one package deal or individual procedures — not both at once.
         </p>
-        <ProcedureSelector
-          procedures={procedures}
-          selected={selectedProcedures}
-          onToggle={onToggleProcedure}
-        />
+        {packages.length > 0 && (
+          <div className="mb-6">
+            <h3 className="mb-2 text-sm font-medium text-slate-700">Package deals</h3>
+            <PackageSelector
+              packages={packages}
+              selectedPackageId={selectedPackageId}
+              onSelectPackage={onSelectPackage}
+            />
+          </div>
+        )}
+        <div className={selectedPackageId ? 'pointer-events-none opacity-50' : ''}>
+          <h3 className="mb-2 text-sm font-medium text-slate-700">Individual procedures</h3>
+          <ProcedureSelector
+            procedures={procedures}
+            selected={selectedProcedures}
+            onToggle={onToggleProcedure}
+          />
+        </div>
       </section>
 
       <section className="card">
@@ -77,7 +97,11 @@ export default function BookingForm({
             <TimeSlotPicker
               totalDurationMinutes={totalDuration}
               selectedDate={selectedDate}
-              selectedProcedures={selectedProcedureList}
+              selectedProcedures={
+                selectedPackage
+                  ? selectedPackage.procedures || []
+                  : selectedProcedureList
+              }
               slots={slots}
               slotsMessage={slotsMessage}
               dailyFull={dailyFull}

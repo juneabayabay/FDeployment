@@ -28,6 +28,7 @@ class PatientViewSet(viewsets.ModelViewSet):
                 user_roles__role__slug=Role.USER,
             )
             .distinct()
+            .select_related("patient_profile")
             .prefetch_related("user_roles__role")
             .order_by("-created_at")
         )

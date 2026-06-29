@@ -38,6 +38,25 @@ export function getPaymentStatusLabel(status) {
   return PAYMENT_STATUS_LABELS[status] || status;
 }
 
+export const BOOKING_SOURCE_LABELS = {
+  online: 'Online',
+  walk_in: 'Walk-in',
+  emergency: 'Emergency',
+};
+
+export function getBookingSourceLabel(source) {
+  return BOOKING_SOURCE_LABELS[source] || source;
+}
+
+export function getBookingSourceBadgeClass(source) {
+  const map = {
+    online: 'bg-sky-100 text-sky-800',
+    walk_in: 'bg-violet-100 text-violet-800',
+    emergency: 'bg-red-100 text-red-800',
+  };
+  return map[source] || 'bg-slate-100 text-slate-600';
+}
+
 export function getStatusClass(status) {
   const map = {
     pending: 'pending',

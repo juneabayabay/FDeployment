@@ -9,6 +9,7 @@ import { FormSkeleton } from '../../components/patient/PatientSkeletons';
 import {
   useClinicInfo,
   useProcedures,
+  useProcedurePackages,
   useCompatibleSlots,
   useCreateAppointment,
 } from '../../hooks/useAppointments';
@@ -26,6 +27,7 @@ export default function BookAppointmentPage() {
   const initialDate = searchParams.get('date');
 
   const [selectedProcedures, setSelectedProcedures] = useState([]);
+  const [selectedPackageId, setSelectedPackageId] = useState(null);
   const [selectedDate, setSelectedDate] = useState(
     initialDate ? parseApiDate(initialDate) : null
   );
@@ -35,44 +37,66 @@ export default function BookAppointmentPage() {
 
   const clinic = useClinicInfo();
   const procedures = useProcedures();
+  const packages = useProcedurePackages();
   const dentists = useDentistDirectory();
   const createMutation = useCreateAppointment();
 
   const procList = procedures.data || [];
-  const totalDuration = procList
-    .filter((p) => selectedProcedures.includes(Number(p.id)))
-    .reduce((sum, p) => sum + p.duration_minutes, 0);
-  const totalAmount = procList
-    .filter((p) => selectedProcedures.includes(Number(p.id)))
-    .reduce((sum, p) => sum + Number(p.price), 0);
+  const packageList = packages.data || [];
+  const selectedPackage = packageList.find(
+    (p) => Number(p.id) === Number(selectedPackageId)
+  );
+
+  const totalDuration = selectedPackage
+    ? selectedPackage.total_duration_minutes
+    : procList
+        .filter((p) => selectedProcedures.includes(Number(p.id)))
+        .reduce((sum, p) => sum + p.duration_minutes, 0);
+  const totalAmount = selectedPackage
+    ? Number(selectedPackage.package_price)
+    : procList
+        .filter((p) => selectedProcedures.includes(Number(p.id)))
+        .reduce((sum, p) => sum + Number(p.price), 0);
 
   const dateParam = selectedDate ? toApiDate(selectedDate) : null;
-  const slots = useCompatibleSlots(selectedProcedures, dateParam);
+  const slots = useCompatibleSlots(selectedProcedures, dateParam, selectedPackageId);
   const displayDate = selectedDate || (slots.data?.date ? parseApiDate(slots.data.date) : null);
 
   const toggleProcedure = (id) => {
     const numId = Number(id);
+    setSelectedPackageId(null);
     setSelectedProcedures((prev) =>
       prev.includes(numId) ? prev.filter((x) => x !== numId) : [...prev, numId]
     );
     setSelectedDate(null);
   };
 
+  const handleSelectPackage = (packageId) => {
+    setSelectedPackageId(packageId);
+    if (packageId) setSelectedProcedures([]);
+    setSelectedDate(null);
+  };
+
   const handleBook = async (bookingType, startTime) => {
     setError('');
-    if (!displayDate || !startTime || selectedProcedures.length === 0) {
-      setError('Please select a procedure, date, and time.');
+    if (!displayDate || !startTime || (!selectedPackageId && selectedProcedures.length === 0)) {
+      setError('Please select a package or procedure, date, and time.');
       return;
     }
     try {
-      await createMutation.mutateAsync({
+      const payload = {
         appointment_date: toApiDate(displayDate),
         start_time: startTime,
-        procedure_ids: selectedProcedures,
         booking_type: bookingType,
         dentist_id: preferredDentist?.user_id ?? null,
         notes,
-      });
+      };
+      if (selectedPackageId) {
+        payload.package_id = Number(selectedPackageId);
+      } else {
+        payload.procedure_ids = selectedProcedures;
+      }
+      await createMutation.mutateAsync(payload);
       navigate('/patient/appointments', {
         replace: true,
         state: {
@@ -97,13 +121,14 @@ export default function BookAppointmentPage() {
       />
 
       <QueryState
-        isLoading={clinic.isLoading || procedures.isLoading}
-        isError={clinic.isError || procedures.isError}
-        error={clinic.error || procedures.error}
+        isLoading={clinic.isLoading || procedures.isLoading || packages.isLoading}
+        isError={clinic.isError || procedures.isError || packages.isError}
+        error={clinic.error || procedures.error || packages.error}
         skeleton={<FormSkeleton />}
         onRetry={() => {
           clinic.refetch();
           procedures.refetch();
+          packages.refetch();
         }}
       >
         <ErrorMessage message={error} />
@@ -140,8 +165,11 @@ export default function BookAppointmentPage() {
 
         <BookingForm
           procedures={procList}
+          packages={packageList}
           selectedProcedures={selectedProcedures}
           onToggleProcedure={toggleProcedure}
+          selectedPackageId={selectedPackageId}
+          onSelectPackage={handleSelectPackage}
           selectedDate={displayDate}
           onSelectDate={setSelectedDate}
           slots={slots.data?.slots || []}

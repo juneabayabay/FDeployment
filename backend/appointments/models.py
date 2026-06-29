@@ -45,6 +45,27 @@ class Procedure(models.Model):
         return self.name
 
 
+class ProcedurePackage(models.Model):
+    name = models.CharField(max_length=150)
+    slug = models.SlugField(max_length=150, unique=True)
+    description = models.TextField(blank=True)
+    procedures = models.ManyToManyField(Procedure, related_name="packages")
+    package_price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "procedure_packages"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def total_duration_minutes(self):
+        return sum(p.duration_minutes for p in self.procedures.filter(is_active=True))
+
+
 class Appointment(models.Model):
     class Status(models.TextChoices):
         PENDING = "pending", "Pending"
@@ -57,6 +78,11 @@ class Appointment(models.Model):
     class BookingType(models.TextChoices):
         PAID = "paid", "Book Now (Pay)"
         PENCIL = "pencil", "Pencil Booking (4 hrs)"
+
+    class BookingSource(models.TextChoices):
+        ONLINE = "online", "Online"
+        WALK_IN = "walk_in", "Walk-in"
+        EMERGENCY = "emergency", "Emergency"
 
     ACTIVE_STATUSES = (
         Status.PENDING,
@@ -88,6 +114,11 @@ class Appointment(models.Model):
         max_length=20,
         choices=BookingType.choices,
         default=BookingType.PENCIL,
+    )
+    booking_source = models.CharField(
+        max_length=20,
+        choices=BookingSource.choices,
+        default=BookingSource.ONLINE,
     )
     procedures = models.ManyToManyField(Procedure, related_name="appointments")
     total_duration_minutes = models.PositiveIntegerField(default=0)
@@ -150,6 +181,11 @@ class WaitingListEntry(models.Model):
     procedures = models.ManyToManyField(Procedure, related_name="waiting_list_entries")
     notes = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
+    suggested_for_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date of an open slot this entry is recommended for",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     PatientOrthodonticViewSet,
+    PatientPrescriptionViewSet,
     PatientSurgicalViewSet,
     PatientTreatmentViewSet,
 )
@@ -22,6 +23,11 @@ router.register(
     r"(?P<patient_pk>[^/.]+)/surgical",
     PatientSurgicalViewSet,
     basename="patient-surgical",
+)
+router.register(
+    r"(?P<patient_pk>[^/.]+)/prescriptions",
+    PatientPrescriptionViewSet,
+    basename="patient-prescriptions",
 )
 
 urlpatterns = [

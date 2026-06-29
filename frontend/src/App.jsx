@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import PatientLayout from './layouts/PatientLayout';
+import PublicLayout from './layouts/PublicLayout';
 import AdminLoginPage from './pages/auth/AdminLoginPage';
 import DentistLoginPage from './pages/auth/DentistLoginPage';
 import PatientLoginPage from './pages/auth/PatientLoginPage';
@@ -8,6 +9,8 @@ import ReceptionistLoginPage from './pages/auth/ReceptionistLoginPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import HomePage from './pages/public/HomePage';
+import AboutPage from './pages/public/AboutPage';
 import NotFoundPage from './pages/errors/NotFoundPage';
 import UnauthorizedPage from './pages/errors/UnauthorizedPage';
 import PatientDashboardPage from './pages/patient/PatientDashboardPage';
@@ -33,7 +36,11 @@ import { ROLES } from './utils/constants';
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<PatientLoginPage />} />
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+      </Route>
+
       <Route path="/login" element={<PatientLoginPage />} />
 
       <Route path="/demo" element={<PortalHomePage />} />
@@ -42,7 +49,7 @@ export default function App() {
       <Route path="/receptionist" element={<ReceptionistLoginPage />} />
 
       {/* Legacy login URLs */}
-      <Route path="/login/patient" element={<Navigate to="/" replace />} />
+      <Route path="/login/patient" element={<Navigate to="/login" replace />} />
       <Route path="/login/admin" element={<Navigate to="/admin" replace />} />
       <Route path="/login/dentist" element={<Navigate to="/dentist" replace />} />
       <Route path="/login/receptionist" element={<Navigate to="/receptionist" replace />} />

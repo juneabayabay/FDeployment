@@ -12,13 +12,15 @@ import {
   useCompatibleSlots,
 } from '../../hooks/useAppointments';
 import { useCreateStaffAppointment } from '../../hooks/useStaffAppointments';
+import { staffAppointmentsService } from '../../services';
 import { useDentistDirectory } from '../../hooks/useDentists';
 import DentistDirectoryPanel from '../../components/dentists/DentistDirectoryPanel';
 import AppointmentParticipants from '../../components/appointments/AppointmentParticipants';
 import { usePatientList } from '../../hooks/usePatients';
 import { useStaffPaths } from '../../hooks/useStaffPaths';
 import { parseApiDate, toApiDate } from '../../utils/clinicDates';
-import { parseApiError } from '../../utils/formatters';
+import { parseApiError, formatTime } from '../../utils/formatters';
+import { getBookingSourceLabel } from '../../utils/appointmentStatus';
 
 export default function BookAppointmentPage() {
   const navigate = useNavigate();
@@ -29,6 +31,9 @@ export default function BookAppointmentPage() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [notes, setNotes] = useState('');
   const [preferredDentist, setPreferredDentist] = useState(null);
+  const [bookingSource, setBookingSource] = useState('online');
+  const [quickBookOffer, setQuickBookOffer] = useState(null);
+  const [quickBookLoading, setQuickBookLoading] = useState(false);
   const [error, setError] = useState('');
 
   const clinic = useClinicInfo();
@@ -55,10 +60,49 @@ export default function BookAppointmentPage() {
       prev.includes(numId) ? prev.filter((x) => x !== numId) : [...prev, numId]
     );
     setSelectedDate(null);
+    setQuickBookOffer(null);
+    setBookingSource('online');
   };
 
-  const handleBook = async (bookingType, startTime) => {
+  const handleQuickBook = async (source) => {
     setError('');
+    setQuickBookOffer(null);
+    if (!patientId) {
+      setError('Please select a patient.');
+      return;
+    }
+    if (selectedProcedures.length === 0 || totalDuration < 1) {
+      setError('Please select at least one procedure.');
+      return;
+    }
+    setQuickBookLoading(true);
+    setBookingSource(source);
+    const today = toApiDate(new Date());
+    try {
+      const { data } = await staffAppointmentsService.getNextAvailableSlot({
+        date: today,
+        duration_minutes: totalDuration,
+      });
+      if (!data.start_time) {
+        setError(data.message || 'No available slots today.');
+        return;
+      }
+      setSelectedDate(parseApiDate(today));
+      setQuickBookOffer({
+        source,
+        startTime: data.start_time,
+        date: today,
+      });
+    } catch (err) {
+      setError(parseApiError(err));
+    } finally {
+      setQuickBookLoading(false);
+    }
+  };
+
+  const handleBook = async (bookingType, startTime, sourceOverride) => {
+    setError('');
+    const source = sourceOverride || bookingSource;
     if (!patientId) {
       setError('Please select a patient.');
       return;
@@ -74,6 +118,7 @@ export default function BookAppointmentPage() {
         start_time: startTime,
         procedure_ids: selectedProcedures,
         booking_type: bookingType,
+        booking_source: source,
         dentist_id: preferredDentist?.user_id ?? null,
         notes,
       });
@@ -176,6 +221,55 @@ export default function BookAppointmentPage() {
         )}
 
         <ClinicPolicyBanner clinic={clinic.data} />
+
+        <section className="card flex flex-wrap gap-3">
+          <p className="w-full text-sm font-medium text-slate-700">Quick booking for today</p>
+          <button
+            type="button"
+            className="btn-outline btn-sm"
+            disabled={quickBookLoading || createMutation.isPending}
+            onClick={() => handleQuickBook('walk_in')}
+          >
+            {quickBookLoading && bookingSource === 'walk_in' ? 'Finding slot…' : 'Walk-in'}
+          </button>
+          <button
+            type="button"
+            className="btn-danger btn-sm"
+            disabled={quickBookLoading || createMutation.isPending}
+            onClick={() => handleQuickBook('emergency')}
+          >
+            {quickBookLoading && bookingSource === 'emergency' ? 'Finding slot…' : 'Emergency'}
+          </button>
+        </section>
+
+        {quickBookOffer && (
+          <div className="card border-violet-200 bg-violet-50">
+            <p className="text-sm text-violet-900">
+              Next available slot today: <strong>{formatTime(quickBookOffer.startTime)}</strong>
+              {' · '}
+              {getBookingSourceLabel(quickBookOffer.source)}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn-primary btn-sm"
+                disabled={createMutation.isPending}
+                onClick={() => handleBook('pencil', quickBookOffer.startTime, quickBookOffer.source)}
+              >
+                Confirm pencil booking
+              </button>
+              <button
+                type="button"
+                className="btn-outline btn-sm"
+                disabled={createMutation.isPending}
+                onClick={() => handleBook('paid', quickBookOffer.startTime, quickBookOffer.source)}
+              >
+                Book & pay now
+              </button>
+            </div>
+          </div>
+        )}
+
         <BookingForm
           procedures={procList}
           selectedProcedures={selectedProcedures}

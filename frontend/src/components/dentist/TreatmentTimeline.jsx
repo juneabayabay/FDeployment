@@ -1,6 +1,11 @@
 import { formatDate } from '../../utils/formatters';
 
-export default function TreatmentTimeline({ treatments = [], orthodontic = [], surgical = [] }) {
+export default function TreatmentTimeline({
+  treatments = [],
+  orthodontic = [],
+  surgical = [],
+  prescriptions = [],
+}) {
   const items = [
     ...treatments.map((r) => ({
       id: `t-${r.id}`,
@@ -22,6 +27,13 @@ export default function TreatmentTimeline({ treatments = [], orthodontic = [], s
       type: 'Surgical',
       title: r.procedure_name,
       detail: r.notes,
+    })),
+    ...prescriptions.map((r) => ({
+      id: `p-${r.id}`,
+      date: r.prescribed_date,
+      type: 'Prescription',
+      title: `${r.medication} — ${r.dosage}`,
+      detail: r.instructions,
     })),
   ].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 

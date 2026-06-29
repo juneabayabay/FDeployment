@@ -33,4 +33,15 @@ export const clinicalService = {
 
   deleteOrthodontic: (patientId, id) =>
     httpClient.delete(`/patients/${patientId}/orthodontic/${id}/`),
+
+  listPrescriptions: (patientId) => httpClient.get(`/patients/${patientId}/prescriptions/`),
+
+  createPrescription: (patientId, data) =>
+    httpClient.post(`/patients/${patientId}/prescriptions/`, data),
+
+  updatePrescription: (patientId, id, data) =>
+    httpClient.patch(`/patients/${patientId}/prescriptions/${id}/`, data),
+
+  scheduleOrthodonticNext: (patientId, id) =>
+    httpClient.post(`/patients/${patientId}/orthodontic/${id}/schedule-next/`),
 };

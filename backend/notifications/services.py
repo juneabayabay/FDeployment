@@ -36,23 +36,46 @@ def _try_send_email(recipient, subject, text_body):
         logger.warning("Email not sent to %s: %s", recipient, error)
 
 
-def notify_waiting_list_for_freed_slot(appointment_date, procedure_ids=None):
-    """Notify matching active waiting-list patients when a slot opens."""
+def _matching_waiting_list_entries(appointment_date, procedure_ids=None):
     from appointments.models import WaitingListEntry
 
     procedure_ids = set(procedure_ids or [])
-    entries = WaitingListEntry.objects.filter(is_active=True).prefetch_related(
-        "procedures"
-    )
+    entries = []
 
-    for entry in entries:
+    for entry in WaitingListEntry.objects.filter(is_active=True).prefetch_related(
+        "procedures"
+    ):
         if entry.preferred_date and entry.preferred_date != appointment_date:
             continue
         if procedure_ids:
             entry_ids = set(entry.procedures.values_list("id", flat=True))
             if entry_ids and not entry_ids.intersection(procedure_ids):
                 continue
-        notify_waiting_list_slot(entry, appointment_date)
+        entries.append(entry)
+
+    return sorted(
+        entries,
+        key=lambda e: (
+            0 if e.preferred_date == appointment_date else 1,
+            e.created_at,
+        ),
+    )
+
+
+def notify_waiting_list_for_freed_slot(appointment_date, procedure_ids=None):
+    """Recommend and notify the top-ranked waiting-list patient when a slot opens."""
+    from appointments.models import WaitingListEntry
+
+    matches = _matching_waiting_list_entries(appointment_date, procedure_ids)
+    WaitingListEntry.objects.filter(is_active=True).update(suggested_for_date=None)
+
+    if not matches:
+        return
+
+    top_entry = matches[0]
+    top_entry.suggested_for_date = appointment_date
+    top_entry.save(update_fields=["suggested_for_date"])
+    notify_waiting_list_slot(top_entry, appointment_date)
 
 
 def notify_appointment_confirmed(appointment):

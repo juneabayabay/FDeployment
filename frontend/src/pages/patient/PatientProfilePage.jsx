@@ -49,6 +49,90 @@ function ProfileDetailsForm({ user, refreshUser, onMessage, onError }) {
   );
 }
 
+function MedicalHistoryForm({ user, refreshUser, onMessage, onError }) {
+  const [form, setForm] = useState({
+    date_of_birth: user.date_of_birth || '',
+    medical_history: user.medical_history || '',
+    allergies: user.allergies || '',
+    emergency_contact_name: user.emergency_contact_name || '',
+    emergency_contact_phone: user.emergency_contact_phone || '',
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    onError('');
+    onMessage('');
+    try {
+      const payload = {
+        ...form,
+        date_of_birth: form.date_of_birth || null,
+      };
+      await authService.updateMe(payload);
+      await refreshUser();
+      onMessage('Medical history updated.');
+    } catch (err) {
+      onError(parseApiError(err));
+    }
+  };
+
+  return (
+    <form className="card space-y-4" onSubmit={handleSubmit}>
+      <h3 className="font-semibold text-slate-900">Medical history</h3>
+      <p className="text-sm text-slate-500">
+        Optional — helps our dentists prepare for your visit. You can update this anytime.
+      </p>
+      <label className="label">
+        Date of birth
+        <input
+          className="input"
+          type="date"
+          value={form.date_of_birth}
+          onChange={(e) => setForm((p) => ({ ...p, date_of_birth: e.target.value }))}
+        />
+      </label>
+      {user.age != null && (
+        <p className="text-sm text-slate-600">Age: {user.age} years</p>
+      )}
+      <label className="label">
+        Medical history
+        <textarea
+          className="input min-h-[80px]"
+          value={form.medical_history}
+          onChange={(e) => setForm((p) => ({ ...p, medical_history: e.target.value }))}
+          placeholder="Past conditions, surgeries, ongoing treatments..."
+        />
+      </label>
+      <label className="label">
+        Allergies
+        <textarea
+          className="input min-h-[60px]"
+          value={form.allergies}
+          onChange={(e) => setForm((p) => ({ ...p, allergies: e.target.value }))}
+          placeholder="Drug allergies, latex, etc."
+        />
+      </label>
+      <label className="label">
+        Emergency contact name
+        <input
+          className="input"
+          value={form.emergency_contact_name}
+          onChange={(e) => setForm((p) => ({ ...p, emergency_contact_name: e.target.value }))}
+        />
+      </label>
+      <label className="label">
+        Emergency contact phone
+        <input
+          className="input"
+          type="tel"
+          value={form.emergency_contact_phone}
+          onChange={(e) => setForm((p) => ({ ...p, emergency_contact_phone: e.target.value }))}
+        />
+      </label>
+      <button type="submit" className="btn-primary">Save medical history</button>
+    </form>
+  );
+}
+
 export default function PatientProfilePage() {
   const { user, refreshUser, changePassword } = useAuth();
 
@@ -93,6 +177,14 @@ export default function PatientProfilePage() {
 
       <ProfileDetailsForm
           key={user.id}
+          user={user}
+          refreshUser={refreshUser}
+          onMessage={setMessage}
+          onError={setError}
+      />
+
+      <MedicalHistoryForm
+          key={`medical-${user.id}-${user.updated_at}`}
           user={user}
           refreshUser={refreshUser}
           onMessage={setMessage}

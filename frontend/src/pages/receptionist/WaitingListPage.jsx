@@ -10,6 +10,7 @@ import {
   useDeactivateStaffWaitingList,
   useBookStaffWaitingList,
 } from '../../hooks/useStaffAppointments';
+import { staffAppointmentsService } from '../../services';
 import { useListPage, useResetPageOnChange, usePaginatedData } from '../../hooks/usePaginatedList';
 import { usePermission } from '../../hooks/usePermission';
 import { formatDate, parseApiError } from '../../utils/formatters';
@@ -58,6 +59,33 @@ export default function WaitingListPage() {
     }
   };
 
+  const handleBookSuggested = async (row) => {
+    setError('');
+    const duration =
+      (row.procedures || []).reduce((sum, p) => sum + (p.duration_minutes || 0), 0) || 60;
+    try {
+      const { data } = await staffAppointmentsService.getNextAvailableSlot({
+        date: row.suggested_for_date,
+        duration_minutes: duration,
+      });
+      if (!data.start_time) {
+        setError(data.message || 'No slot available on the suggested date.');
+        return;
+      }
+      await book.mutateAsync({
+        id: row.id,
+        data: {
+          appointment_date: row.suggested_for_date,
+          start_time: data.start_time,
+          booking_type: 'pencil',
+        },
+      });
+      setMessage('Suggested slot booked successfully.');
+    } catch (err) {
+      setError(parseApiError(err));
+    }
+  };
+
   const columns = [
     {
       key: 'patient',
@@ -85,6 +113,16 @@ export default function WaitingListPage() {
       render: (row) => row.notes || '—',
     },
     {
+      key: 'status',
+      label: 'Status',
+      render: (row) =>
+        row.is_suggested || row.suggested_for_date ? (
+          <span className="badge bg-sky-100 text-sky-800">Suggested</span>
+        ) : (
+          '—'
+        ),
+    },
+    {
       key: 'created',
       label: 'Joined',
       render: (row) => formatDate(row.created_at?.slice(0, 10)),
@@ -94,8 +132,18 @@ export default function WaitingListPage() {
       label: '',
       render: (row) => (
         <div className="flex flex-wrap gap-2">
+          {can('appointments.create') && row.suggested_for_date && (
+            <button
+              type="button"
+              className="btn-primary btn-sm"
+              onClick={() => handleBookSuggested(row)}
+              disabled={book.isPending}
+            >
+              Book this slot
+            </button>
+          )}
           {can('appointments.create') && (
-            <button type="button" className="btn-primary btn-sm" onClick={() => setBookEntry(row)}>
+            <button type="button" className="btn-outline btn-sm" onClick={() => setBookEntry(row)}>
               Book slot
             </button>
           )}

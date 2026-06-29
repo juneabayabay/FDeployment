@@ -11,12 +11,26 @@ export default function WaitingListPanel({ entries, onLeave, leavingId }) {
           {entries.map((entry) => (
             <li
               key={entry.id}
-              className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm"
+              className={`flex items-center justify-between rounded-lg border px-4 py-3 text-sm ${
+                entry.is_suggested || entry.suggested_for_date
+                  ? 'border-sky-300 bg-sky-50'
+                  : 'border-slate-100 bg-slate-50'
+              }`}
             >
-              <span>
-                {entry.preferred_date ? formatDate(entry.preferred_date) : 'Any date'} — joined{' '}
-                {new Date(entry.created_at).toLocaleDateString()}
-              </span>
+              <div>
+                <p>
+                  {entry.preferred_date ? formatDate(entry.preferred_date) : 'Any date'} — joined{' '}
+                  {new Date(entry.created_at).toLocaleDateString()}
+                </p>
+                {(entry.is_suggested || entry.suggested_for_date) && (
+                  <p className="mt-1 text-xs font-medium text-sky-700">
+                    You may be contacted for an open slot
+                    {entry.suggested_for_date
+                      ? ` on ${formatDate(entry.suggested_for_date)}`
+                      : ''}
+                  </p>
+                )}
+              </div>
               <button
                 type="button"
                 className="btn-ghost btn-sm text-red-600"

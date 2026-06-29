@@ -71,6 +71,7 @@ ROLE_PERMISSIONS = {
         "appointments.create",
         "appointments.update",
         "appointments.delete",
+        "treatments.view",
         "billing.view",
         "billing.create",
         "billing.update",

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from .models import ClinicSetting, Procedure
+from .models import ClinicSetting, Procedure, ProcedurePackage
+from .serializers import ProcedureSerializer
 
 
 class ClinicSettingSerializer(serializers.ModelSerializer):
@@ -24,6 +25,43 @@ class StaffProcedureSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
+
+    def create(self, validated_data):
+        from django.utils.text import slugify
+
+        if not validated_data.get("slug"):
+            validated_data["slug"] = slugify(validated_data["name"])
+        return super().create(validated_data)
+
+
+class StaffProcedurePackageSerializer(serializers.ModelSerializer):
+    procedure_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Procedure.objects.all(),
+        source="procedures",
+        many=True,
+        write_only=True,
+    )
+    procedures = ProcedureSerializer(many=True, read_only=True)
+    total_duration_minutes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProcedurePackage
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "description",
+            "procedure_ids",
+            "procedures",
+            "package_price",
+            "total_duration_minutes",
+            "is_active",
+            "created_at",
+        ]
+        read_only_fields = ["id", "total_duration_minutes", "created_at"]
+
+    def get_total_duration_minutes(self, obj):
+        return obj.total_duration_minutes
 
     def create(self, validated_data):
         from django.utils.text import slugify

@@ -25,12 +25,17 @@ export default function RegisterPage() {
     last_name: '',
     password: '',
     password_confirm: '',
+    date_of_birth: '',
+    medical_history: '',
+    allergies: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
   });
   const [loading, setLoading] = useState(false);
   const [successToast, setSuccessToast] = useState(null);
   const [errorToast, setErrorToast] = useState(null);
 
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  if (isAuthenticated) return <Navigate to="/patient/dashboard" replace />;
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -52,7 +57,15 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      await register(form);
+      const payload = {
+        ...form,
+        date_of_birth: form.date_of_birth || undefined,
+        medical_history: form.medical_history || undefined,
+        allergies: form.allergies || undefined,
+        emergency_contact_name: form.emergency_contact_name || undefined,
+        emergency_contact_phone: form.emergency_contact_phone || undefined,
+      };
+      await register(payload);
 
       setSuccessToast({
         title: 'Registration Successful',
@@ -99,7 +112,7 @@ export default function RegisterPage() {
         />
       )}
 
-      <PatientAuthShell>
+      <PatientAuthShell wide>
         <h1 className="patient-auth-title">Join our clinic</h1>
         <p className="patient-auth-subhead">
           Create your account and book your first appointment in seconds.
@@ -173,6 +186,64 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          <details className="patient-auth-field">
+            <summary className="cursor-pointer text-sm font-medium" style={{ color: 'var(--patient-muted)' }}>
+              Optional medical information
+            </summary>
+            <div className="mt-3 space-y-3">
+              <PatientAuthField
+                label="Date of birth"
+                name="date_of_birth"
+                type="date"
+                value={form.date_of_birth}
+                onChange={handleChange}
+                disabled={submitDisabled}
+                required={false}
+              />
+              <label className="patient-auth-label" htmlFor="medical_history">
+                Medical history
+              </label>
+              <textarea
+                id="medical_history"
+                name="medical_history"
+                className="patient-auth-input w-full min-h-[72px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                value={form.medical_history}
+                onChange={handleChange}
+                disabled={submitDisabled}
+                placeholder="Past conditions, surgeries..."
+              />
+              <label className="patient-auth-label" htmlFor="allergies">
+                Allergies
+              </label>
+              <textarea
+                id="allergies"
+                name="allergies"
+                className="patient-auth-input w-full min-h-[60px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                value={form.allergies}
+                onChange={handleChange}
+                disabled={submitDisabled}
+                placeholder="Drug allergies, latex..."
+              />
+              <PatientAuthField
+                label="Emergency contact name"
+                name="emergency_contact_name"
+                value={form.emergency_contact_name}
+                onChange={handleChange}
+                disabled={submitDisabled}
+                required={false}
+              />
+              <PatientAuthField
+                label="Emergency contact phone"
+                name="emergency_contact_phone"
+                type="tel"
+                value={form.emergency_contact_phone}
+                onChange={handleChange}
+                disabled={submitDisabled}
+                required={false}
+              />
+            </div>
+          </details>
+
           <PatientAuthButton loading={loading} icon={FaUserPlus} disabled={submitDisabled}>
             {loading ? 'Creating Account...' : 'Create Account'}
           </PatientAuthButton>
@@ -183,7 +254,7 @@ export default function RegisterPage() {
           Already have an account? <Link to="/login">Patient login</Link>
         </p>
         <Link to="/" className="patient-auth-back">
-          ← Back to portal selection
+          ← Back to home
         </Link>
       </PatientAuthShell>
     </>

@@ -9,12 +9,13 @@ from notifications.services import notify_appointment_cancelled, notify_waiting_
 from users.permissions import IsPatientUser
 
 from .clinic_config import get_clinic_info
-from .models import Appointment, Procedure, WaitingListEntry
+from .models import Appointment, Procedure, ProcedurePackage, WaitingListEntry
 from .serializers import (
     AppointmentCreateSerializer,
     AppointmentRescheduleSerializer,
     AppointmentSerializer,
     AvailableSlotsSerializer,
+    ProcedurePackageSerializer,
     ProcedureSerializer,
     WaitingListSerializer,
 )
@@ -32,6 +33,13 @@ def _appointment_queryset():
 class ProcedureListView(generics.ListAPIView):
     queryset = Procedure.objects.filter(is_active=True)
     serializer_class = ProcedureSerializer
+    permission_classes = [IsAuthenticated, IsPatientUser]
+    pagination_class = None
+
+
+class ProcedurePackageListView(generics.ListAPIView):
+    queryset = ProcedurePackage.objects.filter(is_active=True).prefetch_related("procedures")
+    serializer_class = ProcedurePackageSerializer
     permission_classes = [IsAuthenticated, IsPatientUser]
     pagination_class = None
 
@@ -62,13 +70,24 @@ class CompatibleSlotsView(APIView):
     permission_classes = [IsAuthenticated, IsPatientUser]
 
     def get(self, request):
-        raw_ids = request.query_params.get("procedure_ids", "")
-        procedure_ids = [int(x) for x in raw_ids.split(",") if x.strip().isdigit()]
-        if not procedure_ids:
-            return Response(
-                {"detail": "procedure_ids is required (comma-separated)."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        package_id = request.query_params.get("package_id")
+        procedure_ids = []
+        if package_id:
+            try:
+                package_id = int(package_id)
+            except (TypeError, ValueError):
+                return Response(
+                    {"detail": "Invalid package_id."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            raw_ids = request.query_params.get("procedure_ids", "")
+            procedure_ids = [int(x) for x in raw_ids.split(",") if x.strip().isdigit()]
+            if not procedure_ids:
+                return Response(
+                    {"detail": "procedure_ids or package_id is required."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         preferred_date = None
         date_str = request.query_params.get("date")
@@ -84,10 +103,11 @@ class CompatibleSlotsView(APIView):
         result = find_compatible_slots(
             procedure_ids,
             preferred_date=preferred_date,
+            package_id=package_id if package_id else None,
         )
         if result["procedures"] == [] and result["duration_minutes"] == 0:
             return Response(
-                {"detail": "One or more procedures are invalid."},
+                {"detail": "One or more procedures or the package are invalid."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(result)
