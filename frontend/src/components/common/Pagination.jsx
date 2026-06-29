@@ -11,7 +11,7 @@ export default function Pagination({ page, totalPages, onPageChange, className =
       >
         Previous
       </button>
-      <span className="text-sm text-slate-600">
+      <span className="text-sm text-clinic-body">
         Page {page} of {totalPages}
       </span>
       <button

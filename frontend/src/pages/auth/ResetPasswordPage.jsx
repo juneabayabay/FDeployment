@@ -40,10 +40,10 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-sky-100 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 to-clinic-100 p-4">
       <form className="card w-full max-w-md" onSubmit={handleSubmit}>
-        <h1 className="text-2xl font-bold text-slate-900">{APP_NAME}</h1>
-        <p className="mt-2 text-slate-600">Reset your password</p>
+        <h1 className="text-2xl font-bold text-clinic-heading">{APP_NAME}</h1>
+        <p className="mt-2 text-clinic-body">Reset your password</p>
         <div className="mt-6 space-y-4">
           <ErrorMessage message={error} />
           {message && <div className="alert-success">{message}</div>}
@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
             {loading ? 'Resetting...' : 'Reset password'}
           </button>
           <p className="text-center text-sm">
-            <Link to="/login" className="text-sky-600">← Back to patient login</Link>
+            <Link to="/login" className="text-clinic-500">← Back to patient login</Link>
           </p>
         </div>
       </form>

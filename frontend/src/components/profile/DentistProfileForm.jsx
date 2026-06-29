@@ -34,14 +34,14 @@ export default function DentistProfileForm({ onMessage, onError }) {
   };
 
   if (profile.isLoading) {
-    return <div className="card text-sm text-slate-500">Loading directory profile…</div>;
+    return <div className="card text-sm text-clinic-subtle">Loading directory profile…</div>;
   }
 
   return (
     <form className="card space-y-4" onSubmit={handleSubmit}>
       <div>
-        <h3 className="font-semibold text-slate-900">Public directory profile</h3>
-        <p className="text-sm text-slate-500">
+        <h3 className="font-semibold text-clinic-heading">Public directory profile</h3>
+        <p className="text-sm text-clinic-subtle">
           Shown to patients when they browse dentists and book appointments.
         </p>
       </div>
@@ -82,7 +82,7 @@ export default function DentistProfileForm({ onMessage, onError }) {
           onChange={(e) => setForm((p) => ({ ...(p ?? values), bio: e.target.value }))}
         />
       </label>
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-clinic-body">
         <input
           type="checkbox"
           checked={values.is_visible}

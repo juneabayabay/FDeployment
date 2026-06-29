@@ -20,8 +20,8 @@ export default class AppErrorBoundary extends Component {
     if (error) {
       return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-center">
-          <h1 className="text-2xl font-bold text-slate-900">Something went wrong</h1>
-          <p className="mt-2 max-w-md text-sm text-slate-600">
+          <h1 className="text-2xl font-bold text-clinic-heading">Something went wrong</h1>
+          <p className="mt-2 max-w-md text-sm text-clinic-body">
             The page failed to load. Try refreshing or clearing browser storage for this site.
           </p>
           <p className="mt-4 max-w-lg truncate font-mono text-xs text-red-600">{error.message}</p>

@@ -4,14 +4,14 @@ export function getStatusBadgeClass(status) {
     pencil_booked: 'bg-orange-100 text-orange-800',
     pencil: 'bg-orange-100 text-orange-800',
     confirmed: 'bg-emerald-100 text-emerald-800',
-    cancelled: 'bg-slate-100 text-slate-600',
-    completed: 'bg-sky-100 text-sky-800',
+    cancelled: 'bg-slate-100 text-clinic-body',
+    completed: 'bg-clinic-100 text-clinic-700',
     no_show: 'bg-red-100 text-red-800',
     unpaid: 'bg-red-100 text-red-800',
     partial: 'bg-amber-100 text-amber-800',
     paid: 'bg-emerald-100 text-emerald-800',
   };
-  return map[status] || 'bg-slate-100 text-slate-600';
+  return map[status] || 'bg-slate-100 text-clinic-body';
 }
 
 export const APPOINTMENT_STATUS_LABELS = {
@@ -50,11 +50,11 @@ export function getBookingSourceLabel(source) {
 
 export function getBookingSourceBadgeClass(source) {
   const map = {
-    online: 'bg-sky-100 text-sky-800',
+    online: 'bg-clinic-100 text-clinic-700',
     walk_in: 'bg-violet-100 text-violet-800',
     emergency: 'bg-red-100 text-red-800',
   };
-  return map[source] || 'bg-slate-100 text-slate-600';
+  return map[source] || 'bg-slate-100 text-clinic-body';
 }
 
 export function getStatusClass(status) {

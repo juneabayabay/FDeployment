@@ -19,7 +19,7 @@ export default function UserListPage() {
     <div>
       <PageHeader
         title="Users"
-        subtitle="Manage clinic staff and accounts"
+        subtitle="Create, view, and deactivate dentist and receptionist accounts"
         actions={
           can('users.create') ? (
             <div className="flex flex-wrap gap-2">

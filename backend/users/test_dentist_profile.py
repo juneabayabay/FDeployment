@@ -58,6 +58,8 @@ class DentistProfileAPITestCase(APITestCase):
         hidden_profile = DentistProfile.objects.get(user=cls.hidden_dentist)
         hidden_profile.is_visible = False
         hidden_profile.save()
+        cls.profile.is_visible = True
+        cls.profile.save()
 
     def _login(self, email):
         response = self.client.post(
@@ -132,6 +134,28 @@ class DentistProfileAPITestCase(APITestCase):
         self.assertTrue(
             DentistProfile.objects.filter(user=new_dentist).exists()
         )
+
+    def test_new_dentist_role_becomes_only_visible_in_patient_directory(self):
+        new_dentist = User.objects.create_user(
+            email="latest-dentist@test.com",
+            password="TestPass123!",
+            first_name="Latest",
+            last_name="Dentist",
+            is_staff=True,
+        )
+        UserRole.objects.create(
+            user=new_dentist,
+            role=Role.objects.get(slug=Role.DENTIST),
+        )
+        new_profile = DentistProfile.objects.get(user=new_dentist)
+        self.profile.refresh_from_db()
+        self.assertTrue(new_profile.is_visible)
+        self.assertFalse(self.profile.is_visible)
+
+        self._login("patient-dentist@test.com")
+        response = self.client.get("/api/users/dentists/")
+        emails = [item["email"] for item in response.data["results"]]
+        self.assertEqual(emails, ["latest-dentist@test.com"])
 
     def test_directory_detail(self):
         self._login("patient-dentist@test.com")

@@ -158,13 +158,13 @@ export default function BillingPage() {
       <ErrorMessage message={error} />
 
       <div className="patient-hero">
-        <p className="text-sm text-sky-100">Outstanding balance (filtered)</p>
+        <p className="text-sm text-clinic-100">Outstanding balance (filtered)</p>
         <p className="text-3xl font-bold">{formatPrice(totalOutstanding)}</p>
       </div>
 
       {showForm && (
         <form onSubmit={handleCreate} className="card grid gap-4 sm:grid-cols-2">
-          <h2 className="sm:col-span-2 text-lg font-semibold text-slate-900">New billing record</h2>
+          <h2 className="sm:col-span-2 text-lg font-semibold text-clinic-heading">New billing record</h2>
           <label className="label">
             Patient
             <select

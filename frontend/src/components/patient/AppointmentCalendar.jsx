@@ -89,12 +89,12 @@ export default function AppointmentCalendar({ selectedDate, onSelectDate }) {
         <button type="button" className="btn-ghost btn-sm" onClick={goPrev} aria-label="Previous month">
           ‹
         </button>
-        <span className="font-medium text-slate-900">{monthLabel}</span>
+        <span className="font-medium text-clinic-heading">{monthLabel}</span>
         <button type="button" className="btn-ghost btn-sm" onClick={goNext} aria-label="Next month">
           ›
         </button>
       </div>
-      <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs font-medium text-slate-500">
+      <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs font-medium text-clinic-subtle">
         {WEEKDAYS.map((d) => (
           <span key={d}>{d}</span>
         ))}
@@ -110,10 +110,10 @@ export default function AppointmentCalendar({ selectedDate, onSelectDate }) {
                 : isDisabled(day)
                   ? 'cursor-not-allowed text-slate-300'
                   : isSelected(day)
-                    ? 'bg-sky-600 font-semibold text-white'
+                    ? 'bg-clinic-500 font-semibold text-white'
                     : isToday(day)
-                      ? 'bg-sky-100 font-medium text-sky-800 hover:bg-sky-200'
-                      : 'text-slate-700 hover:bg-slate-100'
+                      ? 'bg-clinic-100 font-medium text-clinic-700 hover:bg-clinic-200'
+                      : 'text-clinic-body hover:bg-slate-100'
             }`}
             onClick={() => handleSelect(day)}
             disabled={!day || isDisabled(day)}

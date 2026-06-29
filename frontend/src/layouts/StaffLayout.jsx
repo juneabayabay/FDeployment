@@ -7,7 +7,7 @@ export default function StaffLayout({ rolePrefix }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen" style={{ background: 'var(--gradient-page)' }}>
       <Sidebar
         basePath={rolePrefix}
         mobileOpen={sidebarOpen}

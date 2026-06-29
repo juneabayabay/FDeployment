@@ -37,7 +37,7 @@ export default function Avatar({
 
   return (
     <div
-      className={`flex items-center justify-center rounded-full bg-sky-100 font-semibold text-sky-700 ${sizeClass} ${className}`}
+      className={`flex items-center justify-center rounded-full bg-clinic-100 font-semibold text-clinic-700 ${sizeClass} ${className}`}
       aria-hidden={!user?.full_name}
     >
       {initialsFromUser(user)}

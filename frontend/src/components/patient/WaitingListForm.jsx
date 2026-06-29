@@ -26,8 +26,8 @@ export default function WaitingListForm({ procedures = [], onSubmit, onCancel, l
 
   return (
     <form className="card space-y-4" onSubmit={handleSubmit}>
-      <h3 className="text-lg font-semibold text-slate-900">Join waiting list</h3>
-      <p className="text-sm text-slate-500">
+      <h3 className="text-lg font-semibold text-clinic-heading">Join waiting list</h3>
+      <p className="text-sm text-clinic-subtle">
         Select procedures and an optional preferred date. We will notify you when a slot opens.
       </p>
 

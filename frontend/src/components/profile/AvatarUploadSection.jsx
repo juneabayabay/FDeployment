@@ -78,8 +78,8 @@ export default function AvatarUploadSection({ user, onUpdated, onError, onMessag
       <Avatar user={displayUser} size="xl" />
       <div className="flex flex-1 flex-col gap-3 text-center sm:text-left">
         <div>
-          <h3 className="font-semibold text-slate-900">Profile picture</h3>
-          <p className="text-sm text-slate-500">
+          <h3 className="font-semibold text-clinic-heading">Profile picture</h3>
+          <p className="text-sm text-clinic-subtle">
             JPG, PNG, or WebP. Max 5 MB.
           </p>
         </div>

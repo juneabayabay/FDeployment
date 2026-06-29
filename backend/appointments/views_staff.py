@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.db import transaction
 from django.db.models import Q
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -9,7 +10,7 @@ from notifications.services import notify_appointment_cancelled, notify_waiting_
 
 from .mixins import StaffPermissionMixin
 from .models import Appointment, WaitingListEntry
-from .serializers import AppointmentRescheduleSerializer
+from .serializers import AppointmentRescheduleSerializer, AvailableSlotsSerializer
 from .serializers_staff import (
     StaffAppointmentCreateSerializer,
     StaffAppointmentSerializer,
@@ -105,6 +106,7 @@ class StaffAppointmentDetailView(StaffPermissionMixin, generics.RetrieveUpdateAP
             instance,
             data=request.data,
             partial=partial,
+            context={"request": request},
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -126,19 +128,23 @@ class StaffAppointmentCancelView(StaffPermissionMixin, APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        fee = calculate_cancellation_fee(appointment)
-        appointment.status = Appointment.Status.CANCELLED
-        appointment.cancellation_fee = fee
-        appointment.save(update_fields=["status", "cancellation_fee", "updated_at"])
+        with transaction.atomic():
+            fee = calculate_cancellation_fee(appointment)
+            appointment.status = Appointment.Status.CANCELLED
+            appointment.cancellation_fee = fee
+            appointment.save(update_fields=["status", "cancellation_fee", "updated_at"])
 
-        from billing.services import post_cancellation_fee
+            from billing.services import post_cancellation_fee
 
-        post_cancellation_fee(appointment)
+            post_cancellation_fee(appointment)
 
-        notify_appointment_cancelled(appointment, fee)
-        procedure_ids = list(appointment.procedures.values_list("id", flat=True))
-        notify_waiting_list_for_freed_slot(appointment.appointment_date, procedure_ids)
-        return Response(StaffAppointmentSerializer(appointment, context={"request": request}).data)
+            notify_appointment_cancelled(appointment, fee)
+            procedure_ids = list(appointment.procedures.values_list("id", flat=True))
+            notify_waiting_list_for_freed_slot(appointment.appointment_date, procedure_ids)
+
+        data = StaffAppointmentSerializer(appointment, context={"request": request}).data
+        data["message"] = "Appointment cancelled successfully."
+        return Response(data)
 
 
 class StaffAppointmentRescheduleView(StaffPermissionMixin, APIView):
@@ -279,45 +285,17 @@ class StaffWaitingListBookView(StaffPermissionMixin, APIView):
         )
 
 
-class StaffNextAvailableSlotView(StaffPermissionMixin, APIView):
+class StaffAvailableSlotsView(StaffPermissionMixin, APIView):
     staff_permissions = {"GET": "appointments.view"}
 
     def get(self, request):
-        date_str = request.query_params.get("date")
-        duration_str = request.query_params.get("duration_minutes")
-        if not date_str or duration_str is None:
-            return Response(
-                {"detail": "date and duration_minutes query parameters are required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            slot_date = date.fromisoformat(date_str)
-            duration_minutes = int(duration_str)
-        except (TypeError, ValueError):
-            return Response(
-                {"detail": "Invalid date or duration_minutes."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if duration_minutes < 1:
-            return Response(
-                {"detail": "duration_minutes must be at least 1."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        result = get_next_available_slot(slot_date, duration_minutes)
-        if result:
-            return Response(result)
-
-        meta = get_slots_meta(slot_date, duration_minutes)
-        return Response(
-            {
-                "date": slot_date.isoformat(),
-                "start_time": None,
-                "end_time": None,
-                "duration_minutes": duration_minutes,
-                "message": meta["message"] or "No available slots on this date.",
-            }
+        serializer = AvailableSlotsSerializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        meta = get_slots_meta(
+            serializer.validated_data["date"],
+            serializer.validated_data["duration_minutes"],
         )
+        return Response(meta)
 
 
 class StaffNextAvailableSlotView(StaffPermissionMixin, APIView):

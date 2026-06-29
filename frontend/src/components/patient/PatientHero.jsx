@@ -5,14 +5,14 @@ export default function PatientHero({ user, clinicInfo }) {
 
   return (
     <div className="patient-hero">
-      <p className="text-sm font-medium text-sky-100">🦷 {APP_NAME}</p>
-      <h1 className="mt-1 text-2xl font-bold">{greeting}</h1>
+      <p className="text-caption font-medium uppercase tracking-wide">{APP_NAME}</p>
+      <h1 className="text-page-title mt-1 text-xl sm:text-2xl">{greeting}</h1>
       {clinicInfo && (
-        <p className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-sm text-sky-100">
+        <p className="text-body mt-2 flex flex-wrap gap-x-2 gap-y-1 text-clinic-subtle">
           <span>{clinicInfo.schedule}</span>
           {clinicInfo.lunch_break && (
             <>
-              <span className="hidden sm:inline" aria-hidden="true">
+              <span className="hidden sm:inline text-clinic-muted" aria-hidden="true">
                 ·
               </span>
               <span>{clinicInfo.lunch_break}</span>

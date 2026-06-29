@@ -117,7 +117,7 @@ export default function WaitingListPage() {
       label: 'Status',
       render: (row) =>
         row.is_suggested || row.suggested_for_date ? (
-          <span className="badge bg-sky-100 text-sky-800">Suggested</span>
+          <span className="badge bg-clinic-100 text-clinic-700">Suggested</span>
         ) : (
           '—'
         ),
@@ -175,7 +175,7 @@ export default function WaitingListPage() {
           <h2 className="sm:col-span-2 text-lg font-semibold">
             Book slot for {bookEntry.patient?.full_name || bookEntry.patient?.email}
           </h2>
-          <p className="sm:col-span-2 text-sm text-slate-500">
+          <p className="sm:col-span-2 text-sm text-clinic-subtle">
             Procedures: {(bookEntry.procedures || []).map((p) => p.name).join(', ')}
           </p>
           <label className="label">

@@ -56,7 +56,7 @@ export default function CreateStaffPage() {
     <div>
       <PageHeader
         title="Create Staff Account"
-        subtitle="Administrators can create dentist and receptionist login accounts"
+        subtitle="Clinic staff can create dentist and receptionist login accounts"
       />
 
       <div className="card mb-6 max-w-lg">
@@ -74,7 +74,7 @@ export default function CreateStaffPage() {
             ))}
           </select>
         </label>
-        <p className="mt-2 text-sm text-slate-500">
+        <p className="mt-2 text-sm text-clinic-subtle">
           {roleSlug === ROLES.DENTIST
             ? 'Dentist accounts access the clinical portal at /dentist'
             : 'Receptionist accounts access the front desk portal at /receptionist'}

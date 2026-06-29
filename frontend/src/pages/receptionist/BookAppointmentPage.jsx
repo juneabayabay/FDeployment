@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../components/common/PageHeader';
 import ErrorMessage from '../../components/common/ErrorMessage';
@@ -21,6 +21,8 @@ import { useStaffPaths } from '../../hooks/useStaffPaths';
 import { parseApiDate, toApiDate } from '../../utils/clinicDates';
 import { parseApiError, formatTime } from '../../utils/formatters';
 import { getBookingSourceLabel } from '../../utils/appointmentStatus';
+import WalkInPatientForm from '../../components/staff/WalkInPatientForm';
+import { formatPatientOptionLabel } from '../../utils/patientAccount';
 
 export default function BookAppointmentPage() {
   const navigate = useNavigate();
@@ -34,6 +36,8 @@ export default function BookAppointmentPage() {
   const [bookingSource, setBookingSource] = useState('online');
   const [quickBookOffer, setQuickBookOffer] = useState(null);
   const [quickBookLoading, setQuickBookLoading] = useState(false);
+  const [showWalkInForm, setShowWalkInForm] = useState(false);
+  const [walkInPatient, setWalkInPatient] = useState(null);
   const [error, setError] = useState('');
 
   const clinic = useClinicInfo();
@@ -53,6 +57,16 @@ export default function BookAppointmentPage() {
   const dateParam = selectedDate ? toApiDate(selectedDate) : null;
   const slots = useCompatibleSlots(selectedProcedures, dateParam);
   const displayDate = selectedDate || (slots.data?.date ? parseApiDate(slots.data.date) : null);
+
+  const dentistList = dentists.data?.results ?? [];
+
+  useEffect(() => {
+    if (dentistList.length > 0) {
+      setPreferredDentist(dentistList[0]);
+    } else {
+      setPreferredDentist(null);
+    }
+  }, [dentistList[0]?.id, dentistList.length]);
 
   const toggleProcedure = (id) => {
     const numId = Number(id);
@@ -131,7 +145,12 @@ export default function BookAppointmentPage() {
     }
   };
 
-  const patientOptions = patients.data || [];
+  const patientOptions = [
+    ...(walkInPatient && !(patients.data || []).some((p) => p.id === walkInPatient.id)
+      ? [walkInPatient]
+      : []),
+    ...(patients.data || []),
+  ];
   const selectedPatient = patientOptions.find((p) => String(p.id) === String(patientId));
 
   return (
@@ -144,7 +163,32 @@ export default function BookAppointmentPage() {
       <ErrorMessage message={error} />
 
       <section className="card space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">Select patient</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-clinic-heading">Select patient</h2>
+          <button
+            type="button"
+            className="btn-outline btn-sm"
+            onClick={() => setShowWalkInForm((v) => !v)}
+          >
+            {showWalkInForm ? 'Close walk-in form' : '+ Register walk-in patient'}
+          </button>
+        </div>
+
+        {showWalkInForm && (
+          <WalkInPatientForm
+            compact
+            onSuccess={(patient) => {
+              setPatientId(String(patient.id));
+              setWalkInPatient(patient);
+              setPatientSearch(patient.phone || patient.last_name || '');
+              setShowWalkInForm(false);
+              setError('');
+              patients.refetch();
+            }}
+            onCancel={() => setShowWalkInForm(false)}
+          />
+        )}
+
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="label">
             Search patients
@@ -167,8 +211,7 @@ export default function BookAppointmentPage() {
               <option value="">Choose a patient...</option>
               {patientOptions.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.full_name || `${p.first_name} ${p.last_name}`.trim() || p.email}
-                  {p.phone ? ` · ${p.phone}` : ''}
+                  {formatPatientOptionLabel(p)}
                 </option>
               ))}
             </select>
@@ -187,24 +230,17 @@ export default function BookAppointmentPage() {
         }}
       >
         <DentistDirectoryPanel
-          dentists={dentists.data?.results ?? []}
+          dentists={dentistList}
           loading={dentists.isLoading}
           error={dentists.error}
           onRetry={() => dentists.refetch()}
           selectable
           selectedDentistId={preferredDentist?.id}
-          onSelectDentist={(dentist) =>
-            setPreferredDentist((current) =>
-              current?.id === dentist.id ? null : dentist
-            )
-          }
-          title="Assign dentist (optional)"
-          subtitle="Select the dentist for this appointment."
         />
 
         {(selectedPatient || preferredDentist) && (
           <div className="card">
-            <p className="mb-3 text-sm font-medium text-slate-700">Booking preview</p>
+            <p className="mb-3 text-sm font-medium text-clinic-body">Booking preview</p>
             <AppointmentParticipants
               patient={selectedPatient}
               dentist={
@@ -223,7 +259,7 @@ export default function BookAppointmentPage() {
         <ClinicPolicyBanner clinic={clinic.data} />
 
         <section className="card flex flex-wrap gap-3">
-          <p className="w-full text-sm font-medium text-slate-700">Quick booking for today</p>
+          <p className="w-full text-sm font-medium text-clinic-body">Quick booking for today</p>
           <button
             type="button"
             className="btn-outline btn-sm"

@@ -16,6 +16,11 @@ export const staffAppointmentsService = {
   getSchedule: (date) =>
     httpClient.get('/appointments/staff/schedule/', { params: { date } }),
 
+  getSlots: (date, durationMinutes) =>
+    httpClient.get('/appointments/staff/slots/', {
+      params: { date, duration_minutes: durationMinutes },
+    }),
+
   getWaitingList: (params) =>
     httpClient.get('/appointments/waiting-list/staff/', { params }),
 

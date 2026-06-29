@@ -37,11 +37,11 @@ export default function BarChart({
                 title={tooltip}
               >
                 <div
-                  className="w-full rounded-t bg-sky-500 transition-all"
+                  className="w-full rounded-t bg-clinic-500 transition-all"
                   style={{ height }}
                   aria-label={tooltip}
                 />
-                <span className="hidden w-full truncate text-center text-[10px] text-slate-400 md:block">
+                <span className="hidden w-full truncate text-center text-[10px] text-clinic-muted md:block">
                   {shortLabel}
                 </span>
               </div>
@@ -59,8 +59,8 @@ export default function BarChart({
               key={label}
               className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-xs"
             >
-              <span className="text-slate-600">{formatDate(label)}</span>
-              <span className="shrink-0 font-semibold text-slate-900">{format(val)}</span>
+              <span className="text-clinic-body">{formatDate(label)}</span>
+              <span className="shrink-0 font-semibold text-clinic-heading">{format(val)}</span>
             </li>
           );
         })}

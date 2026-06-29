@@ -3,9 +3,9 @@ import { formatDate } from '../../utils/formatters';
 export default function WaitingListPanel({ entries, onLeave, leavingId }) {
   return (
     <section className="card">
-      <h2 className="mb-4 text-lg font-semibold text-slate-900">Your entries</h2>
+      <h2 className="mb-4 text-lg font-semibold text-clinic-heading">Your entries</h2>
       {entries.length === 0 ? (
-        <p className="text-sm text-slate-500">You are not on the waiting list.</p>
+        <p className="text-sm text-clinic-subtle">You are not on the waiting list.</p>
       ) : (
         <ul className="space-y-2">
           {entries.map((entry) => (
@@ -13,7 +13,7 @@ export default function WaitingListPanel({ entries, onLeave, leavingId }) {
               key={entry.id}
               className={`flex items-center justify-between rounded-lg border px-4 py-3 text-sm ${
                 entry.is_suggested || entry.suggested_for_date
-                  ? 'border-sky-300 bg-sky-50'
+                  ? 'border-clinic-300 bg-clinic-50'
                   : 'border-slate-100 bg-slate-50'
               }`}
             >
@@ -23,7 +23,7 @@ export default function WaitingListPanel({ entries, onLeave, leavingId }) {
                   {new Date(entry.created_at).toLocaleDateString()}
                 </p>
                 {(entry.is_suggested || entry.suggested_for_date) && (
-                  <p className="mt-1 text-xs font-medium text-sky-700">
+                  <p className="mt-1 text-xs font-medium text-clinic-700">
                     You may be contacted for an open slot
                     {entry.suggested_for_date
                       ? ` on ${formatDate(entry.suggested_for_date)}`

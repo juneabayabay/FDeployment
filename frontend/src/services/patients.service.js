@@ -7,6 +7,8 @@ export const patientsService = {
 
   create: (data) => httpClient.post('/patients/', data),
 
+  createWalkIn: (data) => httpClient.post('/patients/walk-in/', data),
+
   update: (id, data) => httpClient.patch(`/patients/${id}/`, data),
 
   delete: (id) => httpClient.delete(`/patients/${id}/`),

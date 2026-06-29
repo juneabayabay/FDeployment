@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import QueryState from '../../components/common/QueryState';
+import EmailVerificationBanner from '../../components/patient/EmailVerificationBanner';
 import PatientHero from '../../components/patient/PatientHero';
 import QuickActionGrid from '../../components/patient/QuickActionGrid';
 import StatsCard from '../../components/patient/StatsCard';
@@ -54,6 +55,7 @@ export default function PatientDashboardPage() {
     <div className="space-y-6">
       <QueryState isError={isError} error={error} onRetry={refetchAll}>
         <PatientHero user={user} clinicInfo={clinic.data} />
+        <EmailVerificationBanner user={user} />
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <StatsCard
@@ -65,8 +67,9 @@ export default function PatientDashboardPage() {
           <StatsCard
             label="Balance due"
             value={formatPrice(totalBalance)}
-            subtext={totalBalance > 0 ? 'Outstanding balance' : 'All paid up'}
+            subtext={totalBalance > 0 ? 'Outstanding amount due' : 'All paid up'}
             accent={totalBalance > 0 ? 'amber' : 'emerald'}
+            highlight={totalBalance > 0}
           />
           <StatsCard
             label="Notifications"
@@ -79,8 +82,8 @@ export default function PatientDashboardPage() {
         {activeAppt ? (
           <section>
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-slate-900">Next appointment</h2>
-              <Link to="/patient/appointments" className="text-sm text-sky-600 hover:text-sky-800">
+              <h2 className="text-lg font-semibold text-clinic-heading">Next appointment</h2>
+              <Link to="/patient/appointments" className="text-sm text-clinic-500 hover:text-clinic-700">
                 View all →
               </Link>
             </div>
@@ -92,8 +95,8 @@ export default function PatientDashboardPage() {
             />
           </section>
         ) : (
-          <section className="rounded-xl border border-dashed border-sky-200 bg-sky-50/50 px-4 py-6 text-center">
-            <p className="text-slate-600">No upcoming appointments</p>
+          <section className="rounded-xl border border-dashed border-clinic-200 bg-clinic-50/50 px-4 py-6 text-center">
+            <p className="text-clinic-body">No upcoming appointments</p>
             <Link to="/patient/book" className="btn-primary mt-3 inline-flex">
               Book your next visit
             </Link>
@@ -101,7 +104,7 @@ export default function PatientDashboardPage() {
         )}
 
         <section>
-          <h2 className="mb-3 text-lg font-semibold text-slate-900">Quick actions</h2>
+          <h2 className="mb-3 text-lg font-semibold text-clinic-heading">Quick actions</h2>
           <QuickActionGrid actions={QUICK_ACTIONS} />
         </section>
 

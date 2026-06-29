@@ -1,18 +1,63 @@
 :root {
-  --color-primary: #2563eb;
-  --color-secondary: #1e40af;
-  --color-bg: #f8fafc;
+  /* Barnabas Dental Clinic brand palette */
+  --color-primary: #00a3a3;
+  --color-primary-mid: #009999;
+  --color-secondary: #007c7c;
+  --color-bg: #e6f7f7;
+  --color-bg-end: #ffffff;
   --color-surface: #ffffff;
-  --color-border: #e5e7eb;
-  --color-text: #111827;
-  --color-text-secondary: #6b7280;
-  --color-success: #059669;
-  --color-warning: #d97706;
-  --color-danger: #dc2626;
+  --color-border: #d4ecec;
+
+  /* Typography — readable hierarchy */
+  --color-text-heading: #1a2e2e;
+  --color-text-body: #2d4040;
+  --color-text-secondary: #4f6666;
+  --color-text-muted: #647a7a;
+  --color-text-label: #3d5353;
+  --color-text-link: #007c7c;
+  --color-text-link-hover: #005f5f;
+  --color-text: var(--color-text-body);
+  --color-text-inverse: #ffffff;
+
+  --color-success: #047857;
+  --color-warning: #b45309;
+  --color-danger: #b91c1c;
+
+  --gradient-page: linear-gradient(145deg, #e6f7f7 0%, #ffffff 100%);
+  --gradient-brand: linear-gradient(135deg, #007c7c, #009999);
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --line-height-tight: 1.35;
+  --line-height-normal: 1.55;
+  --line-height-relaxed: 1.65;
+
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 2px 0 rgb(0 124 124 / 0.06);
+  --shadow-md: 0 4px 12px rgb(0 124 124 / 0.08);
+}
+
+@theme {
+  --color-clinic-50: #e6f7f7;
+  --color-clinic-100: #ccefef;
+  --color-clinic-200: #b3e7e7;
+  --color-clinic-300: #80d4d4;
+  --color-clinic-400: #4dbbbb;
+  --color-clinic-500: #00a3a3;
+  --color-clinic-600: #009999;
+  --color-clinic-700: #007c7c;
+  --color-clinic-800: #005f5f;
+  --color-clinic-heading: #1a2e2e;
+  --color-clinic-body: #2d4040;
+  --color-clinic-subtle: #4f6666;
+  --color-clinic-muted: #647a7a;
+  --color-clinic-label: #3d5353;
+  --color-clinic-link: #007c7c;
 }

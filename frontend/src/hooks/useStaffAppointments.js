@@ -24,6 +24,17 @@ export function useStaffSchedule(date) {
   });
 }
 
+export function useStaffSlots(date, durationMinutes, enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.staffSlots(date, durationMinutes),
+    queryFn: async () => {
+      const { data } = await staffAppointmentsService.getSlots(date, durationMinutes);
+      return data;
+    },
+    enabled: Boolean(date) && durationMinutes > 0 && enabled,
+  });
+}
+
 export function useStaffWaitingList(params = {}) {
   return useQuery({
     queryKey: QUERY_KEYS.staffWaitingList(params),
@@ -64,6 +75,8 @@ export function useCancelStaffAppointment() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff-appointments'] });
       queryClient.invalidateQueries({ queryKey: ['staff-schedule'] });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications });
     },
   });
 }

@@ -38,18 +38,18 @@ export default function TreatmentTimeline({
   ].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
   if (!items.length) {
-    return <p className="py-6 text-center text-sm text-slate-500">No clinical records yet.</p>;
+    return <p className="py-6 text-center text-sm text-clinic-subtle">No clinical records yet.</p>;
   }
 
   return (
-    <ol className="relative space-y-4 border-l-2 border-sky-200 pl-6">
+    <ol className="relative space-y-4 border-l-2 border-clinic-200 pl-6">
       {items.map((item) => (
         <li key={item.id} className="relative">
-          <span className="absolute -left-[1.6rem] top-1 h-3 w-3 rounded-full bg-sky-500 ring-4 ring-white" />
-          <p className="text-xs font-medium uppercase text-sky-600">{item.type}</p>
-          <p className="font-semibold text-slate-900">{item.title}</p>
-          <p className="text-sm text-slate-500">{formatDate(item.date)}</p>
-          {item.detail && <p className="mt-1 text-sm text-slate-600">{item.detail}</p>}
+          <span className="absolute -left-[1.6rem] top-1 h-3 w-3 rounded-full bg-clinic-500 ring-4 ring-white" />
+          <p className="text-xs font-medium uppercase text-clinic-500">{item.type}</p>
+          <p className="font-semibold text-clinic-heading">{item.title}</p>
+          <p className="text-sm text-clinic-subtle">{formatDate(item.date)}</p>
+          {item.detail && <p className="mt-1 text-sm text-clinic-body">{item.detail}</p>}
         </li>
       ))}
     </ol>

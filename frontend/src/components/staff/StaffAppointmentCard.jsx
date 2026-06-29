@@ -1,18 +1,28 @@
 import { formatDate, formatPrice, formatTime } from '../../utils/formatters';
 import { getStatusBadgeClass, getStatusLabel, getBookingSourceLabel, getBookingSourceBadgeClass } from '../../utils/appointmentStatus';
 import AppointmentParticipants from '../appointments/AppointmentParticipants';
-
-const STATUS_OPTIONS = ['pending', 'pencil_booked', 'confirmed', 'completed', 'no_show'];
+import StaffReschedulePanel from './StaffReschedulePanel';
+import {
+  STAFF_STATUS_OPTIONS,
+  canActOnAppointment,
+  canRescheduleAppointment,
+} from '../../utils/staffAppointments';
 
 export default function StaffAppointmentCard({
   appointment,
   onStatusChange,
+  onComplete,
   onCancel,
+  onReschedule,
+  onRescheduleSuccess,
+  onRescheduleCancel,
+  rescheduling,
   updating,
   cancelling,
+  completing,
 }) {
-  const canAct =
-    appointment.status !== 'cancelled' && appointment.status !== 'completed';
+  const canAct = canActOnAppointment(appointment);
+  const showReschedule = canRescheduleAppointment(appointment);
 
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -22,7 +32,7 @@ export default function StaffAppointmentCard({
             patient={appointment.patient}
             dentist={appointment.dentist}
           />
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm text-clinic-body">
             {formatDate(appointment.appointment_date)} · {formatTime(appointment.start_time)} –{' '}
             {formatTime(appointment.end_time)}
           </p>
@@ -38,10 +48,10 @@ export default function StaffAppointmentCard({
         </span>
       )}
 
-      <p className="mt-2 text-sm text-slate-600">
+      <p className="mt-2 text-sm text-clinic-body">
         {(appointment.procedures || []).map((p) => p.name).join(', ') || '—'}
       </p>
-      <p className="mt-1 text-sm font-medium text-slate-800">{formatPrice(appointment.total_amount)}</p>
+      <p className="mt-1 text-sm font-medium text-clinic-heading">{formatPrice(appointment.total_amount)}</p>
 
       {canAct && (
         <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
@@ -53,13 +63,35 @@ export default function StaffAppointmentCard({
               disabled={updating}
               onChange={(e) => onStatusChange(appointment.id, e.target.value)}
             >
-              {STATUS_OPTIONS.map((s) => (
+              {STAFF_STATUS_OPTIONS.map((s) => (
                 <option key={s} value={s}>
                   {getStatusLabel(s)}
                 </option>
               ))}
             </select>
           </label>
+
+          {appointment.can_complete && (
+            <button
+              type="button"
+              className="btn-primary w-full"
+              onClick={() => onComplete(appointment.id)}
+              disabled={completing}
+            >
+              Mark complete
+            </button>
+          )}
+
+          {showReschedule && !rescheduling && (
+            <button
+              type="button"
+              className="btn-outline w-full"
+              onClick={() => onReschedule(appointment.id)}
+            >
+              Reschedule
+            </button>
+          )}
+
           <button
             type="button"
             className="btn-danger w-full"
@@ -68,6 +100,16 @@ export default function StaffAppointmentCard({
           >
             Cancel appointment
           </button>
+        </div>
+      )}
+
+      {rescheduling && (
+        <div className="mt-4 border-t border-slate-100 pt-4">
+          <StaffReschedulePanel
+            appointment={appointment}
+            onSuccess={onRescheduleSuccess}
+            onCancel={onRescheduleCancel}
+          />
         </div>
       )}
     </article>

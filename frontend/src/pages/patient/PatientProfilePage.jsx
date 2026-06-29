@@ -4,16 +4,22 @@ import PageHeader from '../../components/common/PageHeader';
 import AlertBanner from '../../components/common/AlertBanner';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import AvatarUploadSection from '../../components/profile/AvatarUploadSection';
+import EmailVerificationBanner from '../../components/patient/EmailVerificationBanner';
 import { ProfileSkeleton } from '../../components/patient/PatientSkeletons';
 import { authService } from '../../services';
 import { useAuth } from '../../hooks/useAuth';
 import { parseApiError } from '../../utils/formatters';
+import { CIVIL_STATUS_OPTIONS, SEX_OPTIONS } from '../../utils/patientDemographics';
 
 function ProfileDetailsForm({ user, refreshUser, onMessage, onError }) {
   const [form, setForm] = useState({
     first_name: user.first_name || '',
     last_name: user.last_name || '',
     phone: user.phone || '',
+    date_of_birth: user.date_of_birth || '',
+    sex: user.sex || '',
+    civil_status: user.civil_status || '',
+    address: user.address || '',
   });
 
   const handleSubmit = async (e) => {
@@ -21,7 +27,10 @@ function ProfileDetailsForm({ user, refreshUser, onMessage, onError }) {
     onError('');
     onMessage('');
     try {
-      await authService.updateMe(form);
+      await authService.updateMe({
+        ...form,
+        date_of_birth: form.date_of_birth || null,
+      });
       await refreshUser();
       onMessage('Profile updated.');
     } catch (err) {
@@ -31,7 +40,7 @@ function ProfileDetailsForm({ user, refreshUser, onMessage, onError }) {
 
   return (
     <form className="card space-y-4" onSubmit={handleSubmit}>
-      <h3 className="font-semibold text-slate-900">Personal info</h3>
+      <h3 className="font-semibold text-clinic-heading">Personal information</h3>
       {['first_name', 'last_name', 'phone'].map((field) => (
         <label key={field} className="label">
           {field.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
@@ -43,15 +52,63 @@ function ProfileDetailsForm({ user, refreshUser, onMessage, onError }) {
           />
         </label>
       ))}
-      <p className="text-sm text-slate-500">Email: {user.email}</p>
-      <button type="submit" className="btn-primary">Save profile</button>
+      <p className="text-sm text-clinic-subtle">Email: {user.email}</p>
+      <label className="label">
+        Date of birth
+        <input
+          className="input"
+          type="date"
+          value={form.date_of_birth}
+          onChange={(e) => setForm((p) => ({ ...p, date_of_birth: e.target.value }))}
+        />
+      </label>
+      {user.age != null && (
+        <p className="text-sm text-clinic-body">Age: {user.age} years</p>
+      )}
+      <label className="label">
+        Sex
+        <select
+          className="input"
+          value={form.sex}
+          onChange={(e) => setForm((p) => ({ ...p, sex: e.target.value }))}
+        >
+          {SEX_OPTIONS.map((opt) => (
+            <option key={opt.value || 'blank'} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="label">
+        Civil status
+        <select
+          className="input"
+          value={form.civil_status}
+          onChange={(e) => setForm((p) => ({ ...p, civil_status: e.target.value }))}
+        >
+          {CIVIL_STATUS_OPTIONS.map((opt) => (
+            <option key={opt.value || 'blank'} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="label">
+        Address
+        <textarea
+          className="input min-h-[72px]"
+          value={form.address}
+          onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
+          placeholder="Street, city, province..."
+        />
+      </label>
+      <button type="submit" className="btn-primary">Save personal info</button>
     </form>
   );
 }
 
 function MedicalHistoryForm({ user, refreshUser, onMessage, onError }) {
   const [form, setForm] = useState({
-    date_of_birth: user.date_of_birth || '',
     medical_history: user.medical_history || '',
     allergies: user.allergies || '',
     emergency_contact_name: user.emergency_contact_name || '',
@@ -63,11 +120,7 @@ function MedicalHistoryForm({ user, refreshUser, onMessage, onError }) {
     onError('');
     onMessage('');
     try {
-      const payload = {
-        ...form,
-        date_of_birth: form.date_of_birth || null,
-      };
-      await authService.updateMe(payload);
+      await authService.updateMe(form);
       await refreshUser();
       onMessage('Medical history updated.');
     } catch (err) {
@@ -77,22 +130,10 @@ function MedicalHistoryForm({ user, refreshUser, onMessage, onError }) {
 
   return (
     <form className="card space-y-4" onSubmit={handleSubmit}>
-      <h3 className="font-semibold text-slate-900">Medical history</h3>
-      <p className="text-sm text-slate-500">
+      <h3 className="font-semibold text-clinic-heading">Medical history</h3>
+      <p className="text-sm text-clinic-subtle">
         Optional — helps our dentists prepare for your visit. You can update this anytime.
       </p>
-      <label className="label">
-        Date of birth
-        <input
-          className="input"
-          type="date"
-          value={form.date_of_birth}
-          onChange={(e) => setForm((p) => ({ ...p, date_of_birth: e.target.value }))}
-        />
-      </label>
-      {user.age != null && (
-        <p className="text-sm text-slate-600">Age: {user.age} years</p>
-      )}
       <label className="label">
         Medical history
         <textarea
@@ -148,9 +189,13 @@ export default function PatientProfilePage() {
     e.preventDefault();
     setError('');
     setMessage('');
+    if (passwordForm.new_password !== passwordForm.new_password_confirm) {
+      setError('New passwords do not match.');
+      return;
+    }
     try {
       await changePassword(passwordForm);
-      setMessage('Password changed. Please log in again.');
+      setMessage('Password changed successfully.');
       setPasswordForm({ current_password: '', new_password: '', new_password_confirm: '' });
     } catch (err) {
       setError(parseApiError(err));
@@ -162,40 +207,34 @@ export default function PatientProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-6">
-      <PageHeader title="Profile" subtitle="Manage your account and password" />
+    <div className="space-y-6">
+      <PageHeader title="My Profile" subtitle="Manage your personal and medical information" />
 
       {message && <AlertBanner message={message} onDismiss={() => setMessage('')} />}
       <ErrorMessage message={error} />
+      <EmailVerificationBanner user={user} />
 
-      <AvatarUploadSection
+      <AvatarUploadSection user={user} onUpdated={refreshUser} />
+
+      <ProfileDetailsForm
         user={user}
-        onUpdated={refreshUser}
+        refreshUser={refreshUser}
         onMessage={setMessage}
         onError={setError}
       />
 
-      <ProfileDetailsForm
-          key={user.id}
-          user={user}
-          refreshUser={refreshUser}
-          onMessage={setMessage}
-          onError={setError}
-      />
-
       <MedicalHistoryForm
-          key={`medical-${user.id}-${user.updated_at}`}
-          user={user}
-          refreshUser={refreshUser}
-          onMessage={setMessage}
-          onError={setError}
+        user={user}
+        refreshUser={refreshUser}
+        onMessage={setMessage}
+        onError={setError}
       />
 
       <form className="card space-y-4" onSubmit={handlePasswordSubmit}>
-        <h3 className="font-semibold text-slate-900">Change password</h3>
+        <h3 className="font-semibold text-clinic-heading">Change password</h3>
         {['current_password', 'new_password', 'new_password_confirm'].map((field) => (
-          <label key={field} className="label">
-            {field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+          <label key={field} className="label capitalize">
+            {field.replace(/_/g, ' ')}
             <input
               className="input"
               type="password"
@@ -205,11 +244,11 @@ export default function PatientProfilePage() {
             />
           </label>
         ))}
-        <button type="submit" className="btn-secondary">Change password</button>
+        <button type="submit" className="btn-primary">Update password</button>
       </form>
 
-      <p className="text-sm">
-        <Link to="/patient/dashboard" className="text-sky-600">← Back to dashboard</Link>
+      <p className="text-sm text-clinic-subtle">
+        Need help? <Link to="/patient/dashboard" className="text-clinic-500">Return to dashboard</Link>
       </p>
     </div>
   );

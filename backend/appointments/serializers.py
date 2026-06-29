@@ -166,6 +166,14 @@ class AppointmentCreateSerializer(serializers.Serializer):
         return _validate_dentist_user(value)
 
     def validate(self, attrs):
+        user = self.context["request"].user
+        from users.patient_account import patient_must_verify_email
+
+        if patient_must_verify_email(user):
+            raise serializers.ValidationError(
+                "Please verify your email before booking appointments."
+            )
+
         package_id = attrs.get("package_id")
         procedure_ids = attrs.get("procedure_ids") or []
 

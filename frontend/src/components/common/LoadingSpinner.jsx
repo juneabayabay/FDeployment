@@ -5,8 +5,8 @@ export default function LoadingSpinner({ label = 'Loading...', fullPage = false 
         fullPage ? 'min-h-screen' : 'py-16'
       }`}
     >
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-200 border-t-sky-600" />
-      <p className="text-sm text-slate-500">{label}</p>
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-clinic-100 border-t-clinic-500" />
+      <p className="text-sm text-clinic-subtle">{label}</p>
     </div>
   );
 }

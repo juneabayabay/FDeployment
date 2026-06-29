@@ -39,6 +39,7 @@ function dentistPageRoutes(prefix) {
 
       <Route element={<PermissionRoute permission="appointments.view" />}>
         <Route path={`${prefix}/schedule`} element={<ReceptionistSchedulePage />} />
+        <Route path={`${prefix}/appointments`} element={<ReceptionistAppointmentsPage />} />
       </Route>
 
       <Route element={<PermissionRoute permission="appointments.create" />}>

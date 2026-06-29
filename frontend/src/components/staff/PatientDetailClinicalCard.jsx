@@ -4,9 +4,9 @@ import ClinicalRecordActions from '../clinical/ClinicalRecordActions';
 export function TreatmentRecordCard({ record, canUpdate, canDelete, onUpdate, onDelete }) {
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="font-semibold text-slate-900">{record.title}</p>
-      <p className="mt-1 text-sm text-slate-500">{formatDate(record.treatment_date)}</p>
-      {record.notes && <p className="mt-2 text-sm text-slate-600">{record.notes}</p>}
+      <p className="font-semibold text-clinic-heading">{record.title}</p>
+      <p className="mt-1 text-sm text-clinic-subtle">{formatDate(record.treatment_date)}</p>
+      {record.notes && <p className="mt-2 text-sm text-clinic-body">{record.notes}</p>}
       {(canUpdate || canDelete) && (
         <div className="mt-4 border-t border-slate-100 pt-4 [&_.input]:w-full">
           <ClinicalRecordActions
@@ -30,10 +30,10 @@ export function TreatmentRecordCard({ record, canUpdate, canDelete, onUpdate, on
 export function OrthodonticRecordCard({ record, canUpdate, canDelete, onUpdate, onDelete, onScheduleNext, scheduling }) {
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="font-semibold text-slate-900">{record.phase || 'Orthodontic record'}</p>
-      <p className="mt-1 text-sm text-slate-500">Updated {formatDateTime(record.updated_at)}</p>
+      <p className="font-semibold text-clinic-heading">{record.phase || 'Orthodontic record'}</p>
+      <p className="mt-1 text-sm text-clinic-subtle">Updated {formatDateTime(record.updated_at)}</p>
       {record.next_adjustment_date && (
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-clinic-body">
           Next adjustment: {formatDate(record.next_adjustment_date)}
           {record.adjustment_interval_weeks
             ? ` · every ${record.adjustment_interval_weeks} weeks`
@@ -41,7 +41,7 @@ export function OrthodonticRecordCard({ record, canUpdate, canDelete, onUpdate, 
         </p>
       )}
       {record.progress_notes && (
-        <p className="mt-2 text-sm text-slate-600">{record.progress_notes}</p>
+        <p className="mt-2 text-sm text-clinic-body">{record.progress_notes}</p>
       )}
       {onScheduleNext && record.next_adjustment_date && (
         <button
@@ -77,9 +77,9 @@ export function OrthodonticRecordCard({ record, canUpdate, canDelete, onUpdate, 
 export function SurgicalRecordCard({ record, canUpdate, canDelete, onUpdate, onDelete }) {
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="font-semibold text-slate-900">{record.procedure_name}</p>
-      <p className="mt-1 text-sm text-slate-500">{formatDate(record.surgery_date)}</p>
-      {record.notes && <p className="mt-2 text-sm text-slate-600">{record.notes}</p>}
+      <p className="font-semibold text-clinic-heading">{record.procedure_name}</p>
+      <p className="mt-1 text-sm text-clinic-subtle">{formatDate(record.surgery_date)}</p>
+      {record.notes && <p className="mt-2 text-sm text-clinic-body">{record.notes}</p>}
       {(canUpdate || canDelete) && (
         <div className="mt-4 border-t border-slate-100 pt-4 [&_.input]:w-full">
           <ClinicalRecordActions
@@ -103,13 +103,13 @@ export function SurgicalRecordCard({ record, canUpdate, canDelete, onUpdate, onD
 export function PrescriptionRecordCard({ record, canUpdate, canDelete, onUpdate, onDelete }) {
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="font-semibold text-slate-900">{record.medication}</p>
-      <p className="mt-1 text-sm text-slate-600">Dosage: {record.dosage}</p>
-      <p className="mt-1 text-sm text-slate-500">{formatDate(record.prescribed_date)}</p>
+      <p className="font-semibold text-clinic-heading">{record.medication}</p>
+      <p className="mt-1 text-sm text-clinic-body">Dosage: {record.dosage}</p>
+      <p className="mt-1 text-sm text-clinic-subtle">{formatDate(record.prescribed_date)}</p>
       {record.prescribed_by_name && (
-        <p className="mt-1 text-xs text-slate-400">Prescribed by {record.prescribed_by_name}</p>
+        <p className="mt-1 text-xs text-clinic-muted">Prescribed by {record.prescribed_by_name}</p>
       )}
-      {record.instructions && <p className="mt-2 text-sm text-slate-600">{record.instructions}</p>}
+      {record.instructions && <p className="mt-2 text-sm text-clinic-body">{record.instructions}</p>}
       {(canUpdate || canDelete) && (
         <div className="mt-4 border-t border-slate-100 pt-4 [&_.input]:w-full">
           <ClinicalRecordActions

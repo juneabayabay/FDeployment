@@ -42,6 +42,14 @@ export function useCreatePatient() {
   });
 }
 
+export function useCreateWalkInPatient() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload) => patientsService.createWalkIn(payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['patients'] }),
+  });
+}
+
 export function useUpdatePatient() {
   const queryClient = useQueryClient();
   return useMutation({

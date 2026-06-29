@@ -10,21 +10,21 @@ export default function RoleCard({ role }) {
     <article className="card">
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-slate-900">{role.name}</h3>
-          <p className="text-sm text-slate-500">{role.slug}</p>
+          <h3 className="text-lg font-semibold text-clinic-heading">{role.name}</h3>
+          <p className="text-sm text-clinic-subtle">{role.slug}</p>
         </div>
         {role.is_system_role && (
-          <span className="badge bg-slate-100 text-slate-600">System</span>
+          <span className="badge bg-slate-100 text-clinic-body">System</span>
         )}
       </div>
-      {role.description && <p className="mt-2 text-sm text-slate-600">{role.description}</p>}
-      <p className="mt-3 text-sm text-slate-500">
+      {role.description && <p className="mt-2 text-sm text-clinic-body">{role.description}</p>}
+      <p className="mt-3 text-sm text-clinic-subtle">
         {role.permissions?.length || 0} permission(s)
       </p>
       {can('permissions.manage') && (
         <Link
           to={path(`/roles/${role.id}/permissions`)}
-          className="mt-4 inline-block text-sm text-sky-600 hover:text-sky-800"
+          className="mt-4 inline-block text-sm text-clinic-500 hover:text-clinic-700"
         >
           Manage permissions →
         </Link>

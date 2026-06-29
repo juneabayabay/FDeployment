@@ -1,19 +1,33 @@
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import PageHeader from '../../components/common/PageHeader';
 import QueryState from '../../components/common/QueryState';
+import { useAuth } from '../../hooks/useAuth';
 import { usePermission } from '../../hooks/usePermission';
 import { useStaffPaths } from '../../hooks/useStaffPaths';
-import { useUpdateUser, useUser, useResetUserPassword } from '../../hooks/useUsers';
+import { useDeleteUser, useUpdateUser, useUser, useResetUserPassword } from '../../hooks/useUsers';
+import { ROLES } from '../../utils/constants';
 import { parseApiError } from '../../utils/formatters';
+
+const MANAGED_STAFF_ROLES = [ROLES.DENTIST, ROLES.RECEPTIONIST];
+
+function canManageStaffAccount(actor, target) {
+  if (!target || !actor) return false;
+  if (target.id === actor.id) return false;
+  if (target.role_slugs?.includes(ROLES.ADMIN)) return false;
+  return target.role_slugs?.some((role) => MANAGED_STAFF_ROLES.includes(role));
+}
 
 export default function UserDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user: actor } = useAuth();
   const { can } = usePermission();
   const { path } = useStaffPaths();
   const userQuery = useUser(id);
   const updateMutation = useUpdateUser();
+  const deleteMutation = useDeleteUser();
   const resetPassword = useResetUserPassword();
 
   const [form, setForm] = useState(null);
@@ -21,6 +35,7 @@ export default function UserDetailPage() {
   const [error, setError] = useState('');
 
   const user = userQuery.data;
+  const manageable = canManageStaffAccount(actor, user);
 
   const current = form || (user ? {
     first_name: user.first_name || '',
@@ -52,6 +67,22 @@ export default function UserDetailPage() {
     }
   };
 
+  const handleDeactivate = async () => {
+    const label = user.full_name || user.email;
+    if (!window.confirm(`Deactivate ${label}? They will no longer be able to log in.`)) return;
+    setError('');
+    setMessage('');
+    try {
+      await deleteMutation.mutateAsync(id);
+      navigate(path('/users'), {
+        replace: true,
+        state: { message: `${label} has been deactivated.` },
+      });
+    } catch (err) {
+      setError(parseApiError(err));
+    }
+  };
+
   return (
     <div>
       <PageHeader
@@ -72,30 +103,42 @@ export default function UserDetailPage() {
           <>
             <div className="card mb-6 max-w-lg">
               <dl className="space-y-2 text-sm">
-                <div><dt className="text-slate-500">Email</dt><dd>{user.email}</dd></div>
-                <div><dt className="text-slate-500">Roles</dt><dd>{user.role_slugs?.join(', ')}</dd></div>
+                <div><dt className="text-clinic-subtle">Email</dt><dd>{user.email}</dd></div>
+                <div><dt className="text-clinic-subtle">Roles</dt><dd>{user.role_slugs?.join(', ')}</dd></div>
                 <div>
-                  <dt className="text-slate-500">Status</dt>
+                  <dt className="text-clinic-subtle">Status</dt>
                   <dd>{user.is_active ? 'Active' : 'Inactive'}</dd>
                 </div>
               </dl>
-              {can('users.update') && (
-                <button
-                  type="button"
-                  className="btn-outline btn-sm mt-4"
-                  onClick={handleResetPassword}
-                  disabled={resetPassword.isPending}
-                >
-                  Send password reset email
-                </button>
-              )}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {can('users.update') && manageable && (
+                  <button
+                    type="button"
+                    className="btn-outline btn-sm"
+                    onClick={handleResetPassword}
+                    disabled={resetPassword.isPending}
+                  >
+                    Send password reset email
+                  </button>
+                )}
+                {can('users.delete') && manageable && user.is_active && (
+                  <button
+                    type="button"
+                    className="btn-danger btn-sm"
+                    onClick={handleDeactivate}
+                    disabled={deleteMutation.isPending}
+                  >
+                    {deleteMutation.isPending ? 'Deactivating…' : 'Deactivate account'}
+                  </button>
+                )}
+              </div>
+              <ErrorMessage message={error} />
             </div>
 
-            {can('users.update') && current && (
+            {can('users.update') && manageable && current && (
               <form className="card max-w-lg space-y-4" onSubmit={handleSubmit}>
-                <h3 className="font-semibold text-slate-900">Edit user</h3>
+                <h3 className="font-semibold text-clinic-heading">Edit user</h3>
                 {message && <div className="alert-success">{message}</div>}
-                <ErrorMessage message={error} />
                 {['first_name', 'last_name', 'phone'].map((field) => (
                   <label key={field} className="label">
                     {field.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}

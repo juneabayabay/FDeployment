@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PageHeader from '../../components/common/PageHeader';
 import ErrorMessage from '../../components/common/ErrorMessage';
@@ -16,9 +16,11 @@ import {
 import { useDentistDirectory } from '../../hooks/useDentists';
 import DentistDirectoryPanel from '../../components/dentists/DentistDirectoryPanel';
 import AppointmentParticipants from '../../components/appointments/AppointmentParticipants';
+import EmailVerificationBanner from '../../components/patient/EmailVerificationBanner';
 import { useAuth } from '../../hooks/useAuth';
 import { parseApiDate, toApiDate } from '../../utils/clinicDates';
 import { parseApiError } from '../../utils/formatters';
+import { needsEmailVerification } from '../../utils/patientDemographics';
 
 export default function BookAppointmentPage() {
   const navigate = useNavigate();
@@ -111,7 +113,18 @@ export default function BookAppointmentPage() {
     }
   };
 
+  const dentistList = dentists.data?.results ?? [];
+
+  useEffect(() => {
+    if (dentistList.length > 0) {
+      setPreferredDentist(dentistList[0]);
+    } else {
+      setPreferredDentist(null);
+    }
+  }, [dentistList[0]?.id, dentistList.length]);
+
   const pencilHours = clinic.data?.pencil_booking_hours || 4;
+  const bookingBlocked = needsEmailVerification(user);
 
   return (
     <div className="space-y-6">
@@ -119,6 +132,8 @@ export default function BookAppointmentPage() {
         title="Book Appointment"
         subtitle="Choose procedures — compatible times appear automatically"
       />
+
+      {bookingBlocked && <EmailVerificationBanner user={user} />}
 
       <QueryState
         isLoading={clinic.isLoading || procedures.isLoading || packages.isLoading}
@@ -133,25 +148,20 @@ export default function BookAppointmentPage() {
       >
         <ErrorMessage message={error} />
 
+        {!bookingBlocked && (
+          <>
         <DentistDirectoryPanel
-          dentists={dentists.data?.results ?? []}
+          dentists={dentistList}
           loading={dentists.isLoading}
           error={dentists.error}
           onRetry={() => dentists.refetch()}
           selectable
           selectedDentistId={preferredDentist?.id}
-          onSelectDentist={(dentist) =>
-            setPreferredDentist((current) =>
-              current?.id === dentist.id ? null : dentist
-            )
-          }
-          title="Choose a dentist (optional)"
-          subtitle="Your selection is saved with the appointment."
         />
 
         {preferredDentist && (
           <div className="card flex items-center gap-4">
-            <p className="text-sm font-medium text-slate-700">Booking preview</p>
+            <p className="text-sm font-medium text-clinic-body">Booking preview</p>
             <AppointmentParticipants
               patient={user}
               dentist={{
@@ -192,7 +202,7 @@ export default function BookAppointmentPage() {
             This day is full.{' '}
             <button
               type="button"
-              className="font-medium text-sky-600 underline"
+              className="font-medium text-clinic-500 underline"
               onClick={() => navigate('/patient/waiting-list')}
             >
               Join the waiting list
@@ -201,6 +211,8 @@ export default function BookAppointmentPage() {
         )}
 
         <ClinicPolicyBanner clinicInfo={clinic.data} />
+          </>
+        )}
       </QueryState>
     </div>
   );

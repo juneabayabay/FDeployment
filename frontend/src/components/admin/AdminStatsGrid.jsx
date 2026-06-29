@@ -7,7 +7,7 @@ export default function AdminStatsGrid({ stats, path }) {
     {
       label: "Today's appointments",
       value: stats.todayCount,
-      color: 'text-sky-700',
+      color: 'text-clinic-700',
       link: path('/schedule'),
       linkLabel: 'View schedule',
     },
@@ -47,7 +47,7 @@ export default function AdminStatsGrid({ stats, path }) {
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {cards.map((card) => (
         <div key={card.label} className="card">
-          <p className="text-sm text-slate-500">{card.label}</p>
+          <p className="text-sm text-clinic-subtle">{card.label}</p>
           <QueryState
             isLoading={stats.isLoading}
             skeleton={<div className="mt-2 h-8 w-16 animate-pulse rounded bg-slate-200" />}
@@ -55,9 +55,9 @@ export default function AdminStatsGrid({ stats, path }) {
             <p className={`mt-1 text-2xl font-bold ${card.color}`}>
               {card.isFormatted ? card.value : card.value ?? '—'}
             </p>
-            {card.subtitle && <p className="mt-0.5 text-xs text-slate-400">{card.subtitle}</p>}
+            {card.subtitle && <p className="mt-0.5 text-xs text-clinic-muted">{card.subtitle}</p>}
             {card.link && (
-              <Link to={card.link} className="mt-2 inline-block text-sm text-sky-600 hover:text-sky-800">
+              <Link to={card.link} className="mt-2 inline-block text-sm text-clinic-500 hover:text-clinic-700">
                 {card.linkLabel} →
               </Link>
             )}

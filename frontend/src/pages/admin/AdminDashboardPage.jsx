@@ -56,7 +56,7 @@ export default function AdminDashboardPage() {
           <AdminStatsGrid stats={stats} path={path} />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="card">
-              <p className="text-sm text-slate-500">Revenue today</p>
+              <p className="text-sm text-clinic-subtle">Revenue today</p>
               <QueryState isLoading={statsQuery.isLoading} skeleton={<div className="mt-2 h-8 w-20 animate-pulse rounded bg-slate-200" />}>
                 <p className="mt-1 text-2xl font-bold text-emerald-700">
                   {formatPrice(statsQuery.data?.revenue_today || 0)}
@@ -64,7 +64,7 @@ export default function AdminDashboardPage() {
               </QueryState>
             </div>
             <div className="card">
-              <p className="text-sm text-slate-500">Revenue this month</p>
+              <p className="text-sm text-clinic-subtle">Revenue this month</p>
               <QueryState isLoading={statsQuery.isLoading} skeleton={<div className="mt-2 h-8 w-20 animate-pulse rounded bg-slate-200" />}>
                 <p className="mt-1 text-2xl font-bold text-emerald-700">
                   {formatPrice(statsQuery.data?.revenue_month || 0)}
@@ -72,12 +72,12 @@ export default function AdminDashboardPage() {
               </QueryState>
             </div>
             <div className="card">
-              <p className="text-sm text-slate-500">Active patients</p>
-              <p className="mt-1 text-2xl font-bold text-sky-700">{statsQuery.data?.active_patients ?? '—'}</p>
+              <p className="text-sm text-clinic-subtle">Active patients</p>
+              <p className="mt-1 text-2xl font-bold text-clinic-700">{statsQuery.data?.active_patients ?? '—'}</p>
             </div>
             <div className="card">
-              <p className="text-sm text-slate-500">New patients (month)</p>
-              <p className="mt-1 text-2xl font-bold text-sky-700">{statsQuery.data?.new_patients_month ?? '—'}</p>
+              <p className="text-sm text-clinic-subtle">New patients (month)</p>
+              <p className="mt-1 text-2xl font-bold text-clinic-700">{statsQuery.data?.new_patients_month ?? '—'}</p>
             </div>
           </div>
         </>
@@ -107,12 +107,12 @@ export default function AdminDashboardPage() {
       )}
 
       <div>
-        <h2 className="mb-3 text-lg font-semibold text-slate-900">Quick access</h2>
+        <h2 className="mb-3 text-lg font-semibold text-clinic-heading">Quick access</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {quickLinks.map((item) => (
             <Link key={item.path} to={path(item.path)} className="card transition-shadow hover:shadow-md">
-              <h3 className="font-semibold text-slate-900">{item.label}</h3>
-              <p className="mt-1 text-sm text-sky-600">Open →</p>
+              <h3 className="font-semibold text-clinic-heading">{item.label}</h3>
+              <p className="mt-1 text-sm text-clinic-500">Open →</p>
             </Link>
           ))}
         </div>

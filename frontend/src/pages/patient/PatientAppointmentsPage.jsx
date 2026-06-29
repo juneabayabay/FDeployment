@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AppointmentCalendar from '../../components/patient/AppointmentCalendar';
 import AppointmentCard, { AppointmentHistoryItem } from '../../components/patient/AppointmentCard';
 import TimeSlotPicker from '../../components/patient/TimeSlotPicker';
@@ -15,16 +15,28 @@ import {
   useRescheduleAppointment,
   useSlots,
 } from '../../hooks/useAppointments';
-import { parseApiError, formatDuration } from '../../utils/formatters';
+import { parseApiError, formatDuration, formatPrice } from '../../utils/formatters';
 import { toApiDate } from '../../utils/clinicDates';
+
+function buildCancelSuccessMessage(cancellationFee) {
+  const fee = Number(cancellationFee || 0);
+  let message =
+    'Your appointment has been cancelled successfully. It has been removed from your active schedule, and the clinic staff have been notified.';
+  if (fee > 0) {
+    message += ` A cancellation fee of ${formatPrice(fee)} has been added to your billing per clinic policy.`;
+  }
+  return message;
+}
 
 export default function PatientAppointmentsPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [tab, setTab] = useState('active');
   const [rescheduleId, setRescheduleId] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [message, setMessage] = useState(location.state?.message || '');
   const [error, setError] = useState('');
+  const [cancellingId, setCancellingId] = useState(null);
 
   const active = useAppointments('active');
   const history = useAppointments('history');
@@ -38,19 +50,32 @@ export default function PatientAppointmentsPage() {
   const cancelMutation = useCancelAppointment();
   const rescheduleMutation = useRescheduleAppointment();
 
-  const pencilHours = clinic.data?.pencil_booking_hours || 4;
   const cancelHours = clinic.data?.cancellation_window_hours || 24;
   const noShowFee = clinic.data?.no_show_fee || '300';
+  const pencilHours = clinic.data?.pencil_booking_hours || 4;
 
   const handleCancel = async (id) => {
-    const warnFee = `Cancel this appointment? Cancelling within ${cancelHours} hours may incur a ₱${noShowFee} fee.`;
+    const warnFee = `Are you sure you want to cancel this appointment? If you cancel within ${cancelHours} hours of your visit, a fee of ₱${noShowFee} may apply.`;
     if (!window.confirm(warnFee)) return;
+
     setError('');
+    setMessage('');
+    setCancellingId(id);
+
+    if (location.state?.message) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+
     try {
-      await cancelMutation.mutateAsync(id);
-      setMessage('Appointment cancelled.');
+      const { data } = await cancelMutation.mutateAsync(id);
+      setRescheduleId(null);
+      setSelectedDate(null);
+      setMessage(buildCancelSuccessMessage(data?.cancellation_fee));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError(parseApiError(err));
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -60,14 +85,16 @@ export default function PatientAppointmentsPage() {
       return;
     }
     setError('');
+    setMessage('');
     try {
       await rescheduleMutation.mutateAsync({
         id: rescheduleAppt.id,
         data: { appointment_date: toApiDate(selectedDate), start_time: startTime },
       });
-      setMessage('Appointment rescheduled.');
+      setMessage('Your appointment has been rescheduled successfully.');
       setRescheduleId(null);
       setSelectedDate(null);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError(parseApiError(err));
     }
@@ -81,16 +108,20 @@ export default function PatientAppointmentsPage() {
     <div className="space-y-6">
       <PageHeader title="My Appointments" subtitle="View, reschedule, or cancel your appointments" />
 
-      {message && <AlertBanner message={message} onDismiss={() => setMessage('')} />}
+      {message && (
+        <AlertBanner message={message} variant="success" onDismiss={() => setMessage('')} />
+      )}
       <ErrorMessage message={error} />
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {['active', 'history'].map((t) => (
           <button
             key={t}
             type="button"
-            className={`rounded-lg px-4 py-2 text-sm font-medium capitalize ${
-              tab === t ? 'bg-sky-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'
+            className={`rounded-lg px-4 py-2 text-sm font-medium capitalize transition-colors ${
+              tab === t
+                ? 'bg-clinic-500 text-white'
+                : 'border border-clinic-100 bg-white text-clinic-body hover:bg-clinic-50'
             }`}
             onClick={() => setTab(t)}
           >
@@ -105,7 +136,11 @@ export default function PatientAppointmentsPage() {
         error={currentData.error}
         isEmpty={!(currentData.data || []).length}
         emptyTitle={tab === 'active' ? 'No active appointments' : 'No appointment history'}
-        emptyDescription="Book your next visit on the Book page."
+        emptyDescription={
+          tab === 'active'
+            ? 'Book your next visit on the Book page.'
+            : 'Cancelled and completed visits will appear here.'
+        }
         skeleton={<CardListSkeleton count={2} />}
         onRetry={() => currentData.refetch()}
         emptyAction={
@@ -126,14 +161,16 @@ export default function PatientAppointmentsPage() {
                   onReschedule={() => {
                     setRescheduleId(appt.id);
                     setSelectedDate(null);
+                    setError('');
                   }}
-                  cancelling={cancelMutation.isPending}
+                  cancelling={cancellingId === appt.id}
                 />
                 {rescheduleId === appt.id && (
-                  <div className="mt-4 space-y-4 rounded-xl border border-sky-200 bg-sky-50 p-4">
-                    <h3 className="font-medium text-slate-900">Reschedule appointment</h3>
-                    <p className="text-sm text-slate-600">
-                      Duration stays {formatDuration(appt.total_duration_minutes)}. Pick a new date and time.
+                  <div className="mt-4 space-y-4 rounded-xl border border-clinic-100 bg-clinic-50/80 p-4 sm:p-5">
+                    <h3 className="text-section-title">Reschedule appointment</h3>
+                    <p className="text-body text-clinic-subtle">
+                      Duration stays {formatDuration(appt.total_duration_minutes)}. Pick a new date
+                      and time.
                     </p>
                     <AppointmentCalendar selectedDate={selectedDate} onSelectDate={setSelectedDate} />
                     <TimeSlotPicker
@@ -151,7 +188,11 @@ export default function PatientAppointmentsPage() {
                       onSelectSlot={handleReschedule}
                       onRefresh={() => slots.refetch()}
                     />
-                    <button type="button" className="btn-ghost btn-sm" onClick={() => setRescheduleId(null)}>
+                    <button
+                      type="button"
+                      className="btn-ghost btn-sm"
+                      onClick={() => setRescheduleId(null)}
+                    >
                       Cancel reschedule
                     </button>
                   </div>

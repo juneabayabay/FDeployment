@@ -1,6 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from .dentist_directory import set_clinic_dentist
 from .models import DentistProfile, PatientProfile, Role, UserRole
 
 
@@ -8,7 +9,9 @@ from .models import DentistProfile, PatientProfile, Role, UserRole
 def ensure_dentist_profile(sender, instance, created, **kwargs):
     if instance.role.slug != Role.DENTIST:
         return
-    DentistProfile.objects.get_or_create(user=instance.user)
+    profile, profile_created = DentistProfile.objects.get_or_create(user=instance.user)
+    if created or profile_created:
+        set_clinic_dentist(profile)
 
 
 @receiver(post_save, sender=UserRole)

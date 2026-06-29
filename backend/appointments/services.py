@@ -14,8 +14,13 @@ from .clinic_config import (
 from .models import Appointment, Procedure
 
 SLOT_INTERVAL_MINUTES = 30
+COMPLETION_GRACE_MINUTES = 30
 
 ACTIVE_STATUSES = Appointment.ACTIVE_STATUSES
+COMPLETABLE_STATUSES = (
+    Appointment.Status.CONFIRMED,
+    Appointment.Status.PENCIL_BOOKED,
+)
 
 
 def is_clinic_day(d: date) -> bool:
@@ -332,6 +337,20 @@ def find_compatible_slots(procedure_ids, preferred_date=None, scan_days=21, pack
         "daily_full": False,
         "message": message,
     }
+
+
+def can_complete_appointment(appointment, *, now=None):
+    """True when staff may mark an appointment completed (during slot + grace)."""
+    if appointment.status not in COMPLETABLE_STATUSES:
+        return False
+    now = now or timezone.localtime()
+    today = timezone.localdate(now)
+    if appointment.appointment_date != today:
+        return False
+    start_dt = _to_datetime(appointment.appointment_date, appointment.start_time)
+    end_dt = _to_datetime(appointment.appointment_date, appointment.end_time)
+    grace_end = end_dt + timedelta(minutes=COMPLETION_GRACE_MINUTES)
+    return start_dt <= now <= grace_end
 
 
 def get_next_available_slot(appointment_date: date, duration_minutes: int):

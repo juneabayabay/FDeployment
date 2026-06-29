@@ -50,6 +50,13 @@ import {
 } from '../../utils/formatters';
 import { getStatusBadgeClass, getStatusLabel, getPaymentStatusLabel, getBookingSourceLabel, getBookingSourceBadgeClass } from '../../utils/appointmentStatus';
 import { ROLES } from '../../utils/constants';
+import { formatPatientEmail, isWalkInAccount } from '../../utils/patientAccount';
+import {
+  CIVIL_STATUS_OPTIONS,
+  SEX_OPTIONS,
+  formatCivilStatus,
+  formatSex,
+} from '../../utils/patientDemographics';
 
 const TABS = [
   { id: 'profile', label: 'Profile' },
@@ -113,7 +120,11 @@ export default function AdminPatientDetailPage() {
       first_name: p.first_name || '',
       last_name: p.last_name || '',
       phone: p.phone || '',
+      email: isWalkInAccount(p) ? '' : p.email || '',
       date_of_birth: p.date_of_birth || '',
+      sex: p.sex || '',
+      civil_status: p.civil_status || '',
+      address: p.address || '',
       medical_history: p.medical_history || '',
       allergies: p.allergies || '',
       emergency_contact_name: p.emergency_contact_name || '',
@@ -129,6 +140,9 @@ export default function AdminPatientDetailPage() {
         ...editForm,
         date_of_birth: editForm.date_of_birth || null,
       };
+      if (!isWalkInAccount(p) || !editForm.email?.trim()) {
+        delete payload.email;
+      }
       await updateMutation.mutateAsync({ id, data: payload });
       setMessage('Patient profile updated.');
       setEditForm(null);
@@ -204,7 +218,7 @@ export default function AdminPatientDetailPage() {
     <div className="space-y-6">
       <PageHeader
         title={p ? p.full_name || `${p.first_name} ${p.last_name}`.trim() || p.email : 'Patient record'}
-        subtitle={p?.email}
+        subtitle={p ? formatPatientEmail(p) : ''}
         actions={
           <Link to={path('/patients')} className="btn-outline btn-sm">
             ← Back to patients
@@ -229,8 +243,8 @@ export default function AdminPatientDetailPage() {
                 type="button"
                 className={`shrink-0 border-b-2 px-3 py-2 text-sm font-medium sm:px-4 ${
                   tab === t.id
-                    ? 'border-sky-600 text-sky-700'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                    ? 'border-clinic-500 text-clinic-700'
+                    : 'border-transparent text-clinic-subtle hover:text-clinic-body'
                 }`}
                 onClick={() => setTab(t.id)}
               >
@@ -253,23 +267,48 @@ export default function AdminPatientDetailPage() {
                     size="lg"
                   />
                   <div>
-                    <p className="font-semibold text-slate-900">
+                    <p className="font-semibold text-clinic-heading">
                       {p.full_name || `${p.first_name} ${p.last_name}`.trim()}
                     </p>
-                    <p className="text-sm text-slate-500">{p.email}</p>
+                    <p className="text-sm text-clinic-subtle">{formatPatientEmail(p)}</p>
+                    {isWalkInAccount(p) && (
+                      <span className="badge mt-1 bg-amber-100 text-amber-800">Walk-in account</span>
+                    )}
                   </div>
                 </div>
                 <dl className="grid gap-3 sm:grid-cols-2">
                   <div>
-                    <dt className="text-xs font-medium uppercase text-slate-400">Email</dt>
-                    <dd className="text-slate-900">{p.email}</dd>
+                    <dt className="text-xs font-medium uppercase text-clinic-muted">Email</dt>
+                    <dd className="text-clinic-heading">{formatPatientEmail(p)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-medium uppercase text-slate-400">Phone</dt>
-                    <dd className="text-slate-900">{p.phone || '—'}</dd>
+                    <dt className="text-xs font-medium uppercase text-clinic-muted">Phone</dt>
+                    <dd className="text-clinic-heading">{p.phone || '—'}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-medium uppercase text-slate-400">Status</dt>
+                    <dt className="text-xs font-medium uppercase text-clinic-muted">Date of birth</dt>
+                    <dd className="text-clinic-heading">
+                      {p.date_of_birth ? formatDate(p.date_of_birth) : '—'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase text-clinic-muted">Age</dt>
+                    <dd className="text-clinic-heading">{p.age != null ? `${p.age} years` : '—'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase text-clinic-muted">Sex</dt>
+                    <dd className="text-clinic-heading">{formatSex(p.sex)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase text-clinic-muted">Civil status</dt>
+                    <dd className="text-clinic-heading">{formatCivilStatus(p.civil_status)}</dd>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <dt className="text-xs font-medium uppercase text-clinic-muted">Address</dt>
+                    <dd className="whitespace-pre-wrap text-clinic-heading">{p.address || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs font-medium uppercase text-clinic-muted">Status</dt>
                     <dd>
                       <span
                         className={`badge ${p.is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}
@@ -279,38 +318,28 @@ export default function AdminPatientDetailPage() {
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs font-medium uppercase text-slate-400">Registered</dt>
-                    <dd className="text-slate-900">{formatDate(p.created_at?.slice(0, 10))}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium uppercase text-slate-400">Date of birth</dt>
-                    <dd className="text-slate-900">
-                      {p.date_of_birth ? formatDate(p.date_of_birth) : '—'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs font-medium uppercase text-slate-400">Age</dt>
-                    <dd className="text-slate-900">{p.age != null ? `${p.age} years` : '—'}</dd>
+                    <dt className="text-xs font-medium uppercase text-clinic-muted">Registered</dt>
+                    <dd className="text-clinic-heading">{formatDate(p.created_at?.slice(0, 10))}</dd>
                   </div>
                 </dl>
                 <div className="border-t border-slate-100 pt-4">
-                  <h4 className="mb-3 text-sm font-semibold text-slate-900">Medical history</h4>
+                  <h4 className="mb-3 text-sm font-semibold text-clinic-heading">Medical history</h4>
                   <dl className="grid gap-3 sm:grid-cols-2">
                     <div className="sm:col-span-2">
-                      <dt className="text-xs font-medium uppercase text-slate-400">Medical history</dt>
-                      <dd className="whitespace-pre-wrap text-slate-900">
+                      <dt className="text-xs font-medium uppercase text-clinic-muted">Medical history</dt>
+                      <dd className="whitespace-pre-wrap text-clinic-heading">
                         {p.medical_history || '—'}
                       </dd>
                     </div>
                     <div className="sm:col-span-2">
-                      <dt className="text-xs font-medium uppercase text-slate-400">Allergies</dt>
-                      <dd className="whitespace-pre-wrap text-slate-900">{p.allergies || '—'}</dd>
+                      <dt className="text-xs font-medium uppercase text-clinic-muted">Allergies</dt>
+                      <dd className="whitespace-pre-wrap text-clinic-heading">{p.allergies || '—'}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-medium uppercase text-slate-400">
+                      <dt className="text-xs font-medium uppercase text-clinic-muted">
                         Emergency contact
                       </dt>
-                      <dd className="text-slate-900">
+                      <dd className="text-clinic-heading">
                         {p.emergency_contact_name
                           ? `${p.emergency_contact_name}${p.emergency_contact_phone ? ` (${p.emergency_contact_phone})` : ''}`
                           : '—'}
@@ -326,6 +355,18 @@ export default function AdminPatientDetailPage() {
               </>
             ) : (
               <form onSubmit={handleSaveProfile} className="grid gap-4 sm:grid-cols-2">
+                {isWalkInAccount(p) && (
+                  <label className="label sm:col-span-2">
+                    Email
+                    <input
+                      className="input"
+                      type="email"
+                      placeholder="Add a real email for the patient (optional)"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+                    />
+                  </label>
+                )}
                 {['first_name', 'last_name', 'phone'].map((field) => (
                   <label key={field} className="label capitalize">
                     {field.replace('_', ' ')}
@@ -343,6 +384,42 @@ export default function AdminPatientDetailPage() {
                     type="date"
                     value={editForm.date_of_birth}
                     onChange={(e) => setEditForm((f) => ({ ...f, date_of_birth: e.target.value }))}
+                  />
+                </label>
+                <label className="label">
+                  Sex
+                  <select
+                    className="input"
+                    value={editForm.sex}
+                    onChange={(e) => setEditForm((f) => ({ ...f, sex: e.target.value }))}
+                  >
+                    {SEX_OPTIONS.map((opt) => (
+                      <option key={opt.value || 'blank'} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="label">
+                  Civil status
+                  <select
+                    className="input"
+                    value={editForm.civil_status}
+                    onChange={(e) => setEditForm((f) => ({ ...f, civil_status: e.target.value }))}
+                  >
+                    {CIVIL_STATUS_OPTIONS.map((opt) => (
+                      <option key={opt.value || 'blank'} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="label sm:col-span-2">
+                  Address
+                  <textarea
+                    className="input min-h-[72px]"
+                    value={editForm.address}
+                    onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))}
                   />
                 </label>
                 <label className="label sm:col-span-2">

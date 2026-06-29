@@ -13,6 +13,20 @@ class IsPatientUser(BasePermission):
         return user.is_patient_user
 
 
+class IsPatientUserOrClinicStaff(BasePermission):
+    """Read-only booking reference data (procedures, slots, clinic info) for patients and staff."""
+
+    message = "Patient or staff access required."
+
+    def has_permission(self, request, view):
+        user = request.user
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_superuser:
+            return True
+        return user.is_patient_user or user.is_clinic_staff
+
+
 class IsClinicStaffMember(BasePermission):
     message = "Staff access required."
 

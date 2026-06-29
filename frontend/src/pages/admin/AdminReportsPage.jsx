@@ -27,7 +27,7 @@ export default function AdminReportsPage() {
             key={p.value}
             type="button"
             className={`rounded-lg px-4 py-2 text-sm font-medium ${
-              period === p.value ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600'
+              period === p.value ? 'bg-clinic-500 text-white' : 'bg-slate-100 text-clinic-body'
             }`}
             onClick={() => setPeriod(p.value)}
           >
@@ -44,50 +44,50 @@ export default function AdminReportsPage() {
       >
         {data && (
           <>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-clinic-subtle">
               {formatDate(data.from)} — {formatDate(data.to)}
             </p>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="card">
-                <p className="text-sm text-slate-500">Appointments</p>
-                <p className="text-2xl font-bold text-sky-700">{data.appointments_total}</p>
+                <p className="text-sm text-clinic-subtle">Appointments</p>
+                <p className="text-2xl font-bold text-clinic-700">{data.appointments_total}</p>
               </div>
               <div className="card">
-                <p className="text-sm text-slate-500">Completed visits</p>
+                <p className="text-sm text-clinic-subtle">Completed visits</p>
                 <p className="text-2xl font-bold text-emerald-700">{data.appointments_completed}</p>
               </div>
               <div className="card">
-                <p className="text-sm text-slate-500">Revenue collected</p>
+                <p className="text-sm text-clinic-subtle">Revenue collected</p>
                 <p className="text-2xl font-bold text-emerald-700">{formatPrice(data.revenue_collected)}</p>
               </div>
               <div className="card">
-                <p className="text-sm text-slate-500">Cancellation fees</p>
+                <p className="text-sm text-clinic-subtle">Cancellation fees</p>
                 <p className="text-2xl font-bold text-red-600">{formatPrice(data.cancellation_fees)}</p>
               </div>
             </div>
 
             {data.daily_breakdown?.length > 0 && (
               <div className="card space-y-4">
-                <h2 className="font-semibold text-slate-900">Daily revenue</h2>
+                <h2 className="font-semibold text-clinic-heading">Daily revenue</h2>
                 <BarChart data={data.daily_breakdown} valueKey="revenue" formatValue={formatPrice} />
               </div>
             )}
 
             {data.daily_breakdown?.length > 0 && (
               <div className="card space-y-4">
-                <h2 className="font-semibold text-slate-900">Daily appointments</h2>
+                <h2 className="font-semibold text-clinic-heading">Daily appointments</h2>
                 <BarChart data={data.daily_breakdown} valueKey="appointments" />
               </div>
             )}
 
             <div className="card">
-              <h2 className="mb-3 font-semibold text-slate-900">Status breakdown</h2>
+              <h2 className="mb-3 font-semibold text-clinic-heading">Status breakdown</h2>
               <dl className="grid gap-2 sm:grid-cols-2">
                 {Object.entries(data.appointment_counts || {}).map(([status, count]) => (
                   <div key={status} className="flex justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
-                    <dt className="capitalize text-slate-600">{status.replace('_', ' ')}</dt>
-                    <dd className="font-semibold text-slate-900">{count}</dd>
+                    <dt className="capitalize text-clinic-body">{status.replace('_', ' ')}</dt>
+                    <dd className="font-semibold text-clinic-heading">{count}</dd>
                   </div>
                 ))}
               </dl>

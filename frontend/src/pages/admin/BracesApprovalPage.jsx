@@ -143,7 +143,7 @@ export default function BracesApprovalPage() {
           <button
             key={s || 'all'}
             type="button"
-            className={`rounded-lg px-3 py-1.5 text-sm capitalize ${status === s ? 'bg-sky-600 text-white' : 'bg-slate-100'}`}
+            className={`rounded-lg px-3 py-1.5 text-sm capitalize ${status === s ? 'bg-clinic-500 text-white' : 'bg-slate-100'}`}
             onClick={() => setStatus(s)}
           >
             {s || 'all'}

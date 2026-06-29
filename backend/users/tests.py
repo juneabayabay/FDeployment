@@ -97,6 +97,101 @@ class AuthAPITestCase(APITestCase):
 
 
 @override_settings(ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
+class ReceptionistStaffManagementTestCase(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin = User.objects.create_superuser(
+            email="admin-staff-mgmt@test.com",
+            password="TestPass123!",
+            first_name="Admin",
+            last_name="User",
+        )
+        admin_role = Role.objects.get(slug=Role.ADMIN)
+        UserRole.objects.get_or_create(user=cls.admin, role=admin_role)
+
+        cls.receptionist = User.objects.create_user(
+            email="recep-staff-mgmt@test.com",
+            password="TestPass123!",
+            first_name="Recep",
+            last_name="Tionist",
+            is_staff=True,
+        )
+        recep_role = Role.objects.get(slug=Role.RECEPTIONIST)
+        UserRole.objects.create(user=cls.receptionist, role=recep_role)
+        cls._grant_receptionist_staff_permissions()
+
+    @classmethod
+    def _grant_receptionist_staff_permissions(cls):
+        from users.models import ClinicPermission, RolePermission
+
+        role = Role.objects.get(slug=Role.RECEPTIONIST)
+        for codename in [
+            "users.view",
+            "users.create",
+            "users.update",
+            "users.delete",
+            "dentists.view",
+            "dentists.manage",
+        ]:
+            permission = ClinicPermission.objects.get(codename=codename)
+            RolePermission.objects.get_or_create(role=role, permission=permission)
+
+    def _auth(self, email):
+        login = self.client.post(
+            "/api/users/token/",
+            {"email": email, "password": "TestPass123!"},
+            format="json",
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {login.data['access']}")
+
+    def test_receptionist_can_create_dentist_and_receptionist(self):
+        self._auth("recep-staff-mgmt@test.com")
+        for email, role_slug in [
+            ("new-dentist-recep@test.com", "dentist"),
+            ("new-recep-recep@test.com", "receptionist"),
+        ]:
+            response = self.client.post(
+                "/api/users/users/",
+                {
+                    "email": email,
+                    "first_name": "New",
+                    "last_name": "Staff",
+                    "password": "TestPass123!",
+                    "password_confirm": "TestPass123!",
+                    "role_slug": role_slug,
+                },
+                format="json",
+            )
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+    def test_receptionist_can_deactivate_dentist(self):
+        dentist = User.objects.create_user(
+            email="dentist-to-remove@test.com",
+            password="TestPass123!",
+            first_name="Remove",
+            last_name="Me",
+            is_staff=True,
+        )
+        UserRole.objects.create(user=dentist, role=Role.objects.get(slug=Role.DENTIST))
+
+        self._auth("recep-staff-mgmt@test.com")
+        response = self.client.delete(f"/api/users/users/{dentist.id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        dentist.refresh_from_db()
+        self.assertFalse(dentist.is_active)
+
+    def test_receptionist_cannot_deactivate_admin(self):
+        self._auth("recep-staff-mgmt@test.com")
+        response = self.client.delete(f"/api/users/users/{self.admin.id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_receptionist_cannot_deactivate_self(self):
+        self._auth("recep-staff-mgmt@test.com")
+        response = self.client.delete(f"/api/users/users/{self.receptionist.id}/")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+@override_settings(ALLOWED_HOSTS=["testserver", "localhost", "127.0.0.1"])
 class UserCRUDAPITestCase(APITestCase):
     @classmethod
     def setUpTestData(cls):

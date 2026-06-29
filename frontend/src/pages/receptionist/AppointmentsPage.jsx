@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import DataTable from '../../components/common/DataTable';
 import StaffAppointmentCard from '../../components/staff/StaffAppointmentCard';
+import StaffReschedulePanel from '../../components/staff/StaffReschedulePanel';
 import ErrorMessage from '../../components/common/ErrorMessage';
 import PageHeader from '../../components/common/PageHeader';
 import AlertBanner from '../../components/common/AlertBanner';
@@ -18,14 +19,11 @@ import { APPOINTMENT_STATUS_FILTERS } from '../../utils/constants';
 import AppointmentParticipants from '../../components/appointments/AppointmentParticipants';
 import { formatDate, formatPrice, formatTime, parseApiError } from '../../utils/formatters';
 import { getStatusBadgeClass, getStatusLabel, getBookingSourceLabel, getBookingSourceBadgeClass } from '../../utils/appointmentStatus';
-
-const STATUS_OPTIONS = [
-  'pending',
-  'pencil_booked',
-  'confirmed',
-  'completed',
-  'no_show',
-];
+import {
+  STAFF_STATUS_OPTIONS,
+  canActOnAppointment,
+  canRescheduleAppointment,
+} from '../../utils/staffAppointments';
 
 export default function AppointmentsPage() {
   const location = useLocation();
@@ -33,6 +31,7 @@ export default function AppointmentsPage() {
   const [date, setDate] = useState('');
   const [status, setStatus] = useState(searchParams.get('status') || '');
   const [search, setSearch] = useState('');
+  const [rescheduleId, setRescheduleId] = useState(null);
   const [message, setMessage] = useState(location.state?.message || '');
   const [error, setError] = useState('');
   const { path } = useStaffPaths();
@@ -51,13 +50,15 @@ export default function AppointmentsPage() {
   const { results: rows, totalPages } = usePaginatedData(appointments.data);
   const cancelMutation = useCancelStaffAppointment();
   const updateMutation = useUpdateStaffAppointment();
+  const rescheduleAppt = rows.find((row) => row.id === rescheduleId);
 
   const handleCancel = async (id) => {
     if (!window.confirm('Cancel this appointment?')) return;
     setError('');
     try {
       await cancelMutation.mutateAsync(id);
-      setMessage('Appointment cancelled.');
+      if (rescheduleId === id) setRescheduleId(null);
+      setMessage('Appointment cancelled successfully.');
     } catch (err) {
       setError(parseApiError(err));
     }
@@ -71,6 +72,23 @@ export default function AppointmentsPage() {
     } catch (err) {
       setError(parseApiError(err));
     }
+  };
+
+  const handleComplete = async (id) => {
+    if (!window.confirm('Mark this appointment as complete?')) return;
+    setError('');
+    try {
+      await updateMutation.mutateAsync({ id, data: { status: 'completed' } });
+      setMessage('Appointment marked complete.');
+    } catch (err) {
+      setError(parseApiError(err));
+    }
+  };
+
+  const handleRescheduleSuccess = () => {
+    setRescheduleId(null);
+    setMessage('Appointment rescheduled successfully.');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const columns = [
@@ -125,34 +143,56 @@ export default function AppointmentsPage() {
     {
       key: 'actions',
       label: 'Actions',
-      render: (row) => (
-        <div className="flex flex-wrap gap-2">
-          {row.status !== 'cancelled' && row.status !== 'completed' && (
-            <>
-              <select
-                className="input w-auto py-1 text-xs"
-                value={row.status}
-                onChange={(e) => handleStatusChange(row.id, e.target.value)}
-                disabled={updateMutation.isPending}
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {getStatusLabel(s)}
-                  </option>
-                ))}
-              </select>
+      render: (row) => {
+        if (!canActOnAppointment(row)) return '—';
+
+        return (
+          <div className="flex flex-wrap gap-2">
+            <select
+              className="input w-auto py-1 text-xs"
+              value={row.status}
+              onChange={(e) => handleStatusChange(row.id, e.target.value)}
+              disabled={updateMutation.isPending}
+            >
+              {STAFF_STATUS_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {getStatusLabel(s)}
+                </option>
+              ))}
+            </select>
+            {row.can_complete && (
               <button
                 type="button"
-                className="btn-danger btn-sm"
-                onClick={() => handleCancel(row.id)}
-                disabled={cancelMutation.isPending}
+                className="btn-primary btn-sm"
+                onClick={() => handleComplete(row.id)}
+                disabled={updateMutation.isPending}
               >
-                Cancel
+                Mark complete
               </button>
-            </>
-          )}
-        </div>
-      ),
+            )}
+            {canRescheduleAppointment(row) && (
+              <button
+                type="button"
+                className="btn-outline btn-sm"
+                onClick={() => {
+                  setRescheduleId(row.id);
+                  setError('');
+                }}
+              >
+                Reschedule
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn-danger btn-sm"
+              onClick={() => handleCancel(row.id)}
+              disabled={cancelMutation.isPending}
+            >
+              Cancel
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -203,6 +243,14 @@ export default function AppointmentsPage() {
         </label>
       </div>
 
+      {rescheduleAppt && (
+        <StaffReschedulePanel
+          appointment={rescheduleAppt}
+          onSuccess={handleRescheduleSuccess}
+          onCancel={() => setRescheduleId(null)}
+        />
+      )}
+
       <QueryState
         isLoading={appointments.isLoading}
         isError={appointments.isError}
@@ -217,9 +265,18 @@ export default function AppointmentsPage() {
             <StaffAppointmentCard
               appointment={row}
               onStatusChange={handleStatusChange}
+              onComplete={handleComplete}
               onCancel={handleCancel}
+              onReschedule={(id) => {
+                setRescheduleId(id);
+                setError('');
+              }}
+              onRescheduleSuccess={handleRescheduleSuccess}
+              onRescheduleCancel={() => setRescheduleId(null)}
+              rescheduling={rescheduleId === row.id}
               updating={updateMutation.isPending}
               cancelling={cancelMutation.isPending}
+              completing={updateMutation.isPending}
             />
           )}
         />

@@ -6,8 +6,8 @@ export default function ClinicPolicyBanner({ clinicInfo }) {
   const noShowFee = clinicInfo.no_show_fee || '300';
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
-      <strong className="text-slate-800">Clinic policy:</strong>{' '}
+    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-clinic-body shadow-sm">
+      <strong className="text-clinic-heading">Clinic policy:</strong>{' '}
       {clinicInfo.schedule} · Lunch {clinicInfo.lunch_break} · Pencil booking {pencilHours}hrs ·
       Cancelling within {cancelHours}hrs may incur ₱{noShowFee} fee.
     </div>

@@ -65,7 +65,7 @@ export default function SchedulePage() {
         >
           Next →
         </button>
-        <span className="text-sm text-slate-500">
+        <span className="text-sm text-clinic-subtle">
           {appointments.length} appointment{appointments.length !== 1 ? 's' : ''}
         </span>
       </div>
@@ -89,15 +89,15 @@ export default function SchedulePage() {
             <div key={appt.id} className="card flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
                 <div className="min-w-[5rem] text-center">
-                  <p className="text-lg font-bold text-sky-700">{formatTime(appt.start_time)}</p>
-                  <p className="text-xs text-slate-500">{formatDuration(appt.total_duration_minutes)}</p>
+                  <p className="text-lg font-bold text-clinic-700">{formatTime(appt.start_time)}</p>
+                  <p className="text-xs text-clinic-subtle">{formatDuration(appt.total_duration_minutes)}</p>
                 </div>
                 <div className="flex-1 space-y-2">
                   <AppointmentParticipants patient={appt.patient} dentist={appt.dentist} />
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-clinic-subtle">
                     {(appt.procedures || []).map((p) => p.name).join(', ') || 'No procedures'}
                   </p>
-                  <p className="text-sm text-slate-500">{formatPrice(appt.total_amount)}</p>
+                  <p className="text-sm text-clinic-subtle">{formatPrice(appt.total_amount)}</p>
                 </div>
               </div>
               <span className={`badge self-start ${getStatusBadgeClass(appt.status)}`}>

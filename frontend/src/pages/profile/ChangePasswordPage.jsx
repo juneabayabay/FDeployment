@@ -55,7 +55,7 @@ export default function ChangePasswordPage() {
         ))}
         <button type="submit" className="btn-primary">Update password</button>
         <p className="text-sm">
-          <Link to={path('/profile')} className="text-sky-600">← Back to profile</Link>
+          <Link to={path('/profile')} className="text-clinic-500">← Back to profile</Link>
         </p>
       </form>
     </div>

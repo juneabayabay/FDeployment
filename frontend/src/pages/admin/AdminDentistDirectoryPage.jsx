@@ -74,7 +74,7 @@ function EditDentistProfileForm({ profile, onClose, onSaved }) {
           onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
         />
       </label>
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-clinic-body">
         <input
           type="checkbox"
           checked={form.is_visible}
@@ -130,7 +130,7 @@ export default function AdminDentistDirectoryPage() {
                   className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                     profile.is_visible
                       ? 'bg-emerald-100 text-emerald-800'
-                      : 'bg-slate-100 text-slate-600'
+                      : 'bg-slate-100 text-clinic-body'
                   }`}
                 >
                   {profile.is_visible ? 'Visible to patients' : 'Hidden'}

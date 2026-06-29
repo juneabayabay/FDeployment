@@ -11,12 +11,17 @@ import { parseApiError } from '../../utils/formatters';
 export default function PatientDentistsPage() {
   const dentists = useDentistDirectory();
   const list = dentists.data?.results ?? [];
+  const singleDentist = list.length === 1;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Our dentists"
-        subtitle="Learn about our dental team before you book"
+        title={singleDentist ? 'Your dentist' : 'Our dentists'}
+        subtitle={
+          singleDentist
+            ? 'Learn about your clinic dentist before you book'
+            : 'Learn about our dental team before you book'
+        }
       />
 
       <QueryState
@@ -36,7 +41,7 @@ export default function PatientDentistsPage() {
       </QueryState>
 
       <p className="text-sm">
-        <Link to="/patient/book" className="text-sky-600 hover:text-sky-800">
+        <Link to="/patient/book" className="text-clinic-500 hover:text-clinic-700">
           Ready to book? Go to appointment booking →
         </Link>
       </p>

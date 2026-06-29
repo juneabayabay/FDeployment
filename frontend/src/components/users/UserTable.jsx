@@ -11,7 +11,7 @@ export default function UserTable({ users, page, totalPages, onPageChange }) {
       key: 'name',
       label: 'Name',
       render: (row) => (
-        <Link to={path(`/users/${row.id}`)} className="font-medium text-sky-600 hover:text-sky-800">
+        <Link to={path(`/users/${row.id}`)} className="font-medium text-clinic-500 hover:text-clinic-700">
           {row.full_name || `${row.first_name} ${row.last_name}`}
         </Link>
       ),

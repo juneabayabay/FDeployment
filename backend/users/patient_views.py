@@ -1,11 +1,18 @@
 from django.db.models import Q
-from rest_framework import viewsets
-
+from django.utils import timezone
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from .permissions import HasClinicPermission, IsClinicStaffMember
 from .models import Role, User
-from .serializers import PublicRegisterSerializer, UserSerializer, UserUpdateSerializer
+from .serializers import (
+    PublicRegisterSerializer,
+    UserSerializer,
+    UserUpdateSerializer,
+    WalkInPatientCreateSerializer,
+)
 
 
 class PatientViewSet(viewsets.ModelViewSet):
@@ -16,6 +23,7 @@ class PatientViewSet(viewsets.ModelViewSet):
         "list": ["patients.view"],
         "retrieve": ["patients.view"],
         "create": ["patients.create"],
+        "walk_in": ["patients.create"],
         "update": ["patients.update"],
         "partial_update": ["patients.update"],
         "destroy": ["patients.delete"],
@@ -45,9 +53,46 @@ class PatientViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "create":
             return PublicRegisterSerializer
+        if self.action == "walk_in":
+            return WalkInPatientCreateSerializer
         if self.action in ("update", "partial_update"):
             return UserUpdateSerializer
         return UserSerializer
 
     def perform_destroy(self, instance):
         instance.soft_delete()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        if not user.email_verified_at:
+            user.email_verified_at = timezone.now()
+            user.save(update_fields=["email_verified_at", "updated_at"])
+        user = self.get_queryset().get(pk=user.pk)
+        return Response(
+            UserSerializer(user, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        instance = self.get_queryset().get(pk=instance.pk)
+        return Response(
+            UserSerializer(instance, context={"request": request}).data,
+        )
+
+    @action(detail=False, methods=["post"], url_path="walk-in")
+    def walk_in(self, request):
+        serializer = WalkInPatientCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        user = self.get_queryset().get(pk=user.pk)
+        return Response(
+            UserSerializer(user, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )

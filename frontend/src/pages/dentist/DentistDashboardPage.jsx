@@ -54,8 +54,8 @@ export default function DentistDashboardPage() {
       {can('appointments.view') && (
         <div className="card">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold text-slate-900">Today&apos;s schedule</h2>
-            <Link to={path('/schedule')} className="text-sm text-sky-600">
+            <h2 className="font-semibold text-clinic-heading">Today&apos;s schedule</h2>
+            <Link to={path('/schedule')} className="text-sm text-clinic-500">
               Full schedule →
             </Link>
           </div>
@@ -71,16 +71,16 @@ export default function DentistDashboardPage() {
               {todayAppts.slice(0, 5).map((appt) => (
                 <li key={appt.id} className="flex justify-between py-3 text-sm">
                   <div>
-                    <p className="font-medium text-slate-900">
+                    <p className="font-medium text-clinic-heading">
                       {formatTime(appt.start_time)} — {appt.patient?.full_name || appt.patient?.email}
                     </p>
-                    <p className="text-slate-500">
+                    <p className="text-clinic-subtle">
                       {(appt.procedures || []).map((p) => p.name).join(', ')} ·{' '}
                       {formatDuration(appt.total_duration_minutes)}
                     </p>
                   </div>
                   {appt.patient?.id && (
-                    <Link to={path(`/patients/${appt.patient.id}`)} className="text-sky-600">
+                    <Link to={path(`/patients/${appt.patient.id}`)} className="text-clinic-500">
                       Chart
                     </Link>
                   )}
@@ -94,8 +94,8 @@ export default function DentistDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {quickLinks.map((item) => (
           <Link key={item.path} to={path(item.path)} className="card transition-shadow hover:shadow-md">
-            <h3 className="font-semibold text-slate-900">{item.label}</h3>
-            <p className="mt-1 text-sm text-sky-600">Open →</p>
+            <h3 className="font-semibold text-clinic-heading">{item.label}</h3>
+            <p className="mt-1 text-sm text-clinic-500">Open →</p>
           </Link>
         ))}
       </div>

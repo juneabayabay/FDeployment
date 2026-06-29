@@ -54,17 +54,17 @@ export default function PatientLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-sky-50">
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+    <div className="min-h-screen" style={{ background: 'var(--gradient-page)' }}>
+      <header className="sticky top-0 z-40 border-b border-clinic-100 bg-white shadow-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <div>
-            <strong className="text-lg text-slate-900">{APP_NAME}</strong>
-            <span className="ml-2 hidden text-sm text-sky-600 sm:inline">Patient Portal</span>
+            <strong className="text-lg text-clinic-heading">{APP_NAME}</strong>
+            <span className="ml-2 hidden text-sm text-clinic-500 sm:inline">Patient Portal</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
             <Link
               to="/patient/notifications"
-              className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-100"
+              className="relative rounded-lg p-2 text-clinic-muted hover:bg-clinic-50"
               aria-label="Notifications"
             >
               <FiBell className="h-5 w-5" />
@@ -74,7 +74,7 @@ export default function PatientLayout() {
                 </span>
               )}
             </Link>
-            <span className="hidden max-w-[120px] truncate text-sm text-slate-600 sm:inline">
+            <span className="hidden max-w-[120px] truncate text-sm text-clinic-muted sm:inline">
               {user?.full_name || user?.email}
             </span>
             <button type="button" className="btn-ghost btn-sm" onClick={handleLogout}>
@@ -91,8 +91,8 @@ export default function PatientLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-sky-100 text-sky-800'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-clinic-100 text-clinic-700'
+                    : 'text-clinic-muted hover:bg-clinic-50 hover:text-clinic-heading'
                 }`
               }
             >
@@ -127,7 +127,7 @@ export default function PatientLayout() {
                   key="more"
                   type="button"
                   onClick={() => setMoreOpen(true)}
-                  className="flex flex-1 flex-col items-center gap-0.5 px-1 py-1 text-xs text-slate-600"
+                  className="flex flex-1 flex-col items-center gap-0.5 px-1 py-1 text-xs text-clinic-muted"
                 >
                   <FiMenu className="h-5 w-5" />
                   <span>More</span>
@@ -140,7 +140,7 @@ export default function PatientLayout() {
                 to={item.path}
                 className={({ isActive }) =>
                   `flex flex-1 flex-col items-center gap-0.5 px-1 py-1 text-xs ${
-                    isActive ? 'font-semibold text-sky-600' : 'text-slate-600'
+                    isActive ? 'font-semibold text-clinic-500' : 'text-clinic-muted'
                   }`
                 }
               >
@@ -162,7 +162,7 @@ export default function PatientLayout() {
           />
           <div className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-white p-4 shadow-xl">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="font-semibold text-slate-900">More</h3>
+              <h3 className="font-semibold text-clinic-heading">More</h3>
               <button type="button" className="btn-ghost btn-sm" onClick={() => setMoreOpen(false)}>
                 Close
               </button>
@@ -173,9 +173,9 @@ export default function PatientLayout() {
                   key={item.path}
                   to={item.path}
                   onClick={() => setMoreOpen(false)}
-                  className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className="flex items-center gap-2 rounded-xl border border-clinic-100 px-4 py-3 text-sm font-medium text-clinic-heading hover:bg-clinic-50"
                 >
-                  <NavIcon name={item.icon} className="h-5 w-5 text-sky-600" />
+                  <NavIcon name={item.icon} className="h-5 w-5 text-clinic-500" />
                   {item.label}
                   {item.badge && unreadCount > 0 && (
                     <span className="ml-auto rounded-full bg-red-500 px-1.5 text-[10px] text-white">

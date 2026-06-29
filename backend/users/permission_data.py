@@ -63,6 +63,9 @@ ROLE_PERMISSIONS = {
     ],
     "receptionist": [
         "users.view",
+        "users.create",
+        "users.update",
+        "users.delete",
         "roles.view",
         "patients.view",
         "patients.create",
@@ -77,6 +80,7 @@ ROLE_PERMISSIONS = {
         "billing.update",
         "reports.view",
         "dentists.view",
+        "dentists.manage",
     ],
     "user": [
         "patients.view",

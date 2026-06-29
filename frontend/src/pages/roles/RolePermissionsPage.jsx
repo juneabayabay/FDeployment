@@ -76,9 +76,9 @@ export default function RolePermissionsPage() {
             <ErrorMessage message={mutationError ? parseApiError(mutationError) : ''} />
 
             <section className="card mb-6">
-              <h3 className="mb-4 font-semibold text-slate-900">Assigned permissions ({rolePermissions.length})</h3>
+              <h3 className="mb-4 font-semibold text-clinic-heading">Assigned permissions ({rolePermissions.length})</h3>
               {rolePermissions.length === 0 ? (
-                <p className="text-sm text-slate-500">No permissions assigned.</p>
+                <p className="text-sm text-clinic-subtle">No permissions assigned.</p>
               ) : (
                 <ul className="space-y-2">
                   {rolePermissions.map((rp) => (
@@ -104,13 +104,13 @@ export default function RolePermissionsPage() {
             </section>
 
             <section className="card">
-              <h3 className="mb-4 font-semibold text-slate-900">Add permission</h3>
+              <h3 className="mb-4 font-semibold text-clinic-heading">Add permission</h3>
               {available.length === 0 ? (
-                <p className="text-sm text-slate-500">All permissions are already assigned.</p>
+                <p className="text-sm text-clinic-subtle">All permissions are already assigned.</p>
               ) : (
                 Object.entries(grouped).map(([module, perms]) => (
                   <div key={module} className="mb-4">
-                    <h4 className="mb-2 text-sm font-medium uppercase text-slate-500">{module}</h4>
+                    <h4 className="mb-2 text-sm font-medium uppercase text-clinic-subtle">{module}</h4>
                     <ul className="space-y-1">
                       {perms.filter((p) => !assignedIds.has(p.id)).map((p) => (
                         <li

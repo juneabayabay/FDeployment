@@ -36,18 +36,18 @@ export default function BookingForm({
   return (
     <div className="space-y-6">
       <section className="card">
-        <h2 className="mb-1 text-lg font-semibold text-slate-900">
-          <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-sky-600 text-sm text-white">
+        <h2 className="mb-1 text-lg font-semibold text-clinic-heading">
+          <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-clinic-500 text-sm text-white">
             1
           </span>
           Select Package or Procedures
         </h2>
-        <p className="mb-4 text-sm text-slate-500">
+        <p className="mb-4 text-sm text-clinic-subtle">
           Choose one package deal or individual procedures — not both at once.
         </p>
         {packages.length > 0 && (
           <div className="mb-6">
-            <h3 className="mb-2 text-sm font-medium text-slate-700">Package deals</h3>
+            <h3 className="mb-2 text-sm font-medium text-clinic-body">Package deals</h3>
             <PackageSelector
               packages={packages}
               selectedPackageId={selectedPackageId}
@@ -56,7 +56,7 @@ export default function BookingForm({
           </div>
         )}
         <div className={selectedPackageId ? 'pointer-events-none opacity-50' : ''}>
-          <h3 className="mb-2 text-sm font-medium text-slate-700">Individual procedures</h3>
+          <h3 className="mb-2 text-sm font-medium text-clinic-body">Individual procedures</h3>
           <ProcedureSelector
             procedures={procedures}
             selected={selectedProcedures}
@@ -66,21 +66,21 @@ export default function BookingForm({
       </section>
 
       <section className="card">
-        <h2 className="mb-1 text-lg font-semibold text-slate-900">
-          <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-sky-600 text-sm text-white">
+        <h2 className="mb-1 text-lg font-semibold text-clinic-heading">
+          <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-clinic-500 text-sm text-white">
             2
           </span>
           Available Times
         </h2>
         {totalDuration > 0 && (
-          <div className="mb-4 rounded-lg bg-sky-50 px-4 py-2 text-sm text-sky-800">
+          <div className="mb-4 rounded-lg bg-clinic-50 px-4 py-2 text-sm text-clinic-700">
             Your appointment needs {autoMatchLabel || `${totalDuration} min`}
             {selectedDate && ` · Showing slots for ${selectedDate.toLocaleDateString()}`}
           </div>
         )}
         <div className="grid gap-6 lg:grid-cols-2">
           <div>
-            <p className="mb-2 text-sm font-medium text-slate-700">Change date (optional)</p>
+            <p className="mb-2 text-sm font-medium text-clinic-body">Change date (optional)</p>
             <AppointmentCalendar selectedDate={selectedDate} onSelectDate={onSelectDate} />
           </div>
           <div className="space-y-4">

@@ -190,7 +190,7 @@ export default function SystemSettingsPage() {
             key={t}
             type="button"
             className={`rounded-lg px-4 py-2 text-sm font-medium capitalize ${
-              tab === t ? 'bg-sky-600 text-white' : 'bg-white text-slate-600'
+              tab === t ? 'bg-clinic-500 text-white' : 'bg-white text-clinic-body'
             }`}
             onClick={() => {
               setTab(t);
@@ -219,7 +219,7 @@ export default function SystemSettingsPage() {
                   onChange={(e) => setSettingsDraft((d) => ({ ...d, [s.key]: e.target.value }))}
                   disabled={!canManage}
                 />
-                {s.description && <span className="mt-1 block text-xs text-slate-400">{s.description}</span>}
+                {s.description && <span className="mt-1 block text-xs text-clinic-muted">{s.description}</span>}
               </label>
             ))}
             {canManage && (
@@ -234,7 +234,7 @@ export default function SystemSettingsPage() {
       {tab === 'email' && (
         <QueryState isLoading={emailSettings.isLoading} isError={emailSettings.isError} error={emailSettings.error}>
           <div className="card space-y-4 max-w-lg">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-clinic-body">
               Email is configured via server environment variables (
               <code className="text-xs">EMAIL_HOST_USER</code>,{' '}
               <code className="text-xs">EMAIL_HOST_PASSWORD</code>). See{' '}
@@ -378,7 +378,7 @@ export default function SystemSettingsPage() {
                 </label>
               </div>
               <div>
-                <p className="mb-2 text-sm font-medium text-slate-700">Included procedures</p>
+                <p className="mb-2 text-sm font-medium text-clinic-body">Included procedures</p>
                 <div className="flex flex-wrap gap-2">
                   {(procedures.data || [])
                     .filter((p) => p.is_active)

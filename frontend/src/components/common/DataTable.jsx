@@ -11,29 +11,29 @@ export default function DataTable({
   if (loading) return <LoadingSpinner />;
 
   if (!rows?.length) {
-    return <p className="py-8 text-center text-sm text-slate-500">{emptyMessage}</p>;
+    return <p className="text-body py-8 text-center text-clinic-subtle">{emptyMessage}</p>;
   }
 
   const table = (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-      <table className="min-w-full divide-y divide-slate-200 text-sm">
-        <thead className="bg-slate-50">
+    <div className="overflow-x-auto rounded-xl border border-clinic-100 bg-white">
+      <table className="min-w-full divide-y divide-clinic-100 text-sm">
+        <thead className="bg-clinic-50">
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
-                className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                className="text-label px-4 py-3 text-left text-xs uppercase tracking-wide"
               >
                 {col.label}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-clinic-50">
           {rows.map((row) => (
-            <tr key={row[keyField]} className="hover:bg-slate-50">
+            <tr key={row[keyField]} className="hover:bg-clinic-50/60">
               {columns.map((col) => (
-                <td key={col.key} className="px-4 py-3 text-slate-700">
+                <td key={col.key} className="text-body px-4 py-3">
                   {col.render ? col.render(row) : row[col.key]}
                 </td>
               ))}
@@ -50,12 +50,12 @@ export default function DataTable({
 
   return (
     <>
-      <div className="space-y-3 lg:hidden">
+      <div className="hidden md:block">{table}</div>
+      <div className="space-y-3 md:hidden">
         {rows.map((row) => (
           <div key={row[keyField]}>{renderMobileCard(row)}</div>
         ))}
       </div>
-      <div className="hidden lg:block">{table}</div>
     </>
   );
 }

@@ -146,6 +146,37 @@ class AuditFixesTestCase(APITestCase):
             ).exists()
         )
 
+    def test_cancellation_adds_fee_to_existing_billing(self):
+        appt = Appointment.objects.create(
+            patient=self.patient,
+            appointment_date=self.booking_date,
+            start_time=time(11, 30),
+            end_time=time(12, 0),
+            status=Appointment.Status.CONFIRMED,
+            total_duration_minutes=30,
+            total_amount=Decimal("1000.00"),
+        )
+        BillingRecord.objects.create(
+            patient=self.patient,
+            appointment=appt,
+            total_amount=Decimal("1000.00"),
+        )
+
+        self._auth(self.patient)
+        with patch("notifications.services._try_send_email"):
+            with patch(
+                "appointments.views.calculate_cancellation_fee",
+                return_value=Decimal("300.00"),
+            ):
+                response = self.client.post(f"/api/appointments/{appt.id}/cancel/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        appt.refresh_from_db()
+        self.assertEqual(appt.status, Appointment.Status.CANCELLED)
+        bill = BillingRecord.objects.get(appointment=appt)
+        self.assertEqual(bill.total_amount, Decimal("1300.00"))
+        self.assertIn("Cancellation fee", bill.description)
+
     def test_no_show_creates_billing_fee(self):
         appt = Appointment.objects.create(
             patient=self.patient,

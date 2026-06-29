@@ -74,3 +74,58 @@ For your security, never share this link with anyone.
 """
 
     return subject, text_body, html_body
+
+
+def build_email_verification_email(*, recipient_email, recipient_name, verify_link):
+    """Build subject and bodies for a new-account email verification message."""
+    clinic_name = "Barnabas Dental Clinic"
+    display_name = recipient_name or recipient_email
+
+    subject = f"Verify your {clinic_name} patient account"
+
+    text_body = f"""Hello {display_name},
+
+Thank you for registering at {clinic_name}.
+
+Please verify your email address to book appointments online:
+{verify_link}
+
+This link expires in 24 hours. You can sign in before verifying, but booking stays disabled until your email is confirmed.
+
+If you did not create this account, you can ignore this email.
+
+— {clinic_name}
+"""
+
+    html_body = f"""<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 560px; margin: 0 auto; padding: 24px;">
+  <h2 style="color: #0284c7; margin-bottom: 8px;">{clinic_name}</h2>
+  <p style="margin-top: 0; color: #64748b;">Verify your email</p>
+
+  <p>Hello <strong>{display_name}</strong>,</p>
+
+  <p>Thank you for registering. Please confirm your email to book appointments online:</p>
+
+  <p style="text-align: center; margin: 28px 0;">
+    <a href="{verify_link}"
+       style="background-color: #0284c7; color: #ffffff; padding: 12px 24px;
+              text-decoration: none; border-radius: 8px; font-weight: bold;
+              display: inline-block;">
+      Verify my email
+    </a>
+  </p>
+
+  <p style="font-size: 13px; color: #64748b;">
+    Or copy this link into your browser:<br>
+    <a href="{verify_link}" style="color: #0284c7; word-break: break-all;">{verify_link}</a>
+  </p>
+
+  <p style="font-size: 13px; color: #64748b;">
+    This link expires in 24 hours. You may sign in before verifying, but online booking stays disabled until confirmation.
+  </p>
+</body>
+</html>
+"""
+
+    return subject, text_body, html_body

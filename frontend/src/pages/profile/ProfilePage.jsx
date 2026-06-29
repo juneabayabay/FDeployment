@@ -30,7 +30,7 @@ function ProfileDetailsForm({ user, refreshUser, onMessage, onError }) {
 
   return (
     <form className="card space-y-4" onSubmit={handleSubmit}>
-      <h3 className="font-semibold text-slate-900">Personal info</h3>
+      <h3 className="font-semibold text-clinic-heading">Personal info</h3>
       {['first_name', 'last_name', 'phone'].map((field) => (
         <label key={field} className="label">
           {field.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
@@ -42,7 +42,7 @@ function ProfileDetailsForm({ user, refreshUser, onMessage, onError }) {
           />
         </label>
       ))}
-      <p className="text-sm text-slate-500">Email: {user.email}</p>
+      <p className="text-sm text-clinic-subtle">Email: {user.email}</p>
       <button type="submit" className="btn-primary">Save profile</button>
     </form>
   );
@@ -75,7 +75,7 @@ export default function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <h2 className="text-2xl font-bold text-slate-900">Profile</h2>
+      <h2 className="text-2xl font-bold text-clinic-heading">Profile</h2>
       {message && <div className="alert-success">{message}</div>}
       <ErrorMessage message={error} />
 
@@ -103,7 +103,7 @@ export default function ProfilePage() {
       )}
 
       <form className="card space-y-4" onSubmit={handlePasswordSubmit}>
-        <h3 className="font-semibold text-slate-900">Change password</h3>
+        <h3 className="font-semibold text-clinic-heading">Change password</h3>
         {['current_password', 'new_password', 'new_password_confirm'].map((field) => (
           <label key={field} className="label">
             {field.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
@@ -121,7 +121,7 @@ export default function ProfilePage() {
 
       {isPatient && (
         <p className="text-sm">
-          <Link to="/patient/dashboard" className="text-sky-600">← Back to dashboard</Link>
+          <Link to="/patient/dashboard" className="text-clinic-500">← Back to dashboard</Link>
         </p>
       )}
     </div>

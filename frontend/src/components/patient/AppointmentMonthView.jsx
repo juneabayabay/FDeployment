@@ -9,9 +9,9 @@ const STATUS_DOT = {
   confirmed: 'bg-emerald-500',
   pencil_booked: 'bg-amber-500',
   pencil: 'bg-amber-500',
-  pending: 'bg-sky-400',
+  pending: 'bg-clinic-400',
   cancelled: 'bg-slate-400',
-  completed: 'bg-sky-600',
+  completed: 'bg-clinic-500',
   no_show: 'bg-red-400',
 };
 
@@ -86,12 +86,12 @@ export default function AppointmentMonthView({ appointments = [], onDateClick, s
           <button type="button" className="btn-ghost btn-sm" onClick={goPrev} aria-label="Previous month">
             ‹
           </button>
-          <span className="font-medium text-slate-900">{monthLabel}</span>
+          <span className="font-medium text-clinic-heading">{monthLabel}</span>
           <button type="button" className="btn-ghost btn-sm" onClick={goNext} aria-label="Next month">
             ›
           </button>
         </div>
-        <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs font-medium text-slate-500">
+        <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs font-medium text-clinic-subtle">
           {WEEKDAYS.map((d) => (
             <span key={d}>{d}</span>
           ))}
@@ -120,10 +120,10 @@ export default function AppointmentMonthView({ appointments = [], onDateClick, s
                 onClick={() => handleDayClick(day)}
                 className={`flex h-12 flex-col items-center justify-center rounded-lg text-sm transition-colors ${
                   isSelected || isPicked
-                    ? 'bg-sky-600 text-white'
+                    ? 'bg-clinic-500 text-white'
                     : isToday
-                      ? 'bg-sky-50 text-sky-800 ring-1 ring-sky-200'
-                      : 'text-slate-700 hover:bg-slate-100'
+                      ? 'bg-clinic-50 text-clinic-700 ring-1 ring-clinic-200'
+                      : 'text-clinic-body hover:bg-slate-100'
                 }`}
               >
                 <span className="font-medium">{day}</span>
@@ -135,7 +135,7 @@ export default function AppointmentMonthView({ appointments = [], onDateClick, s
                         className={`h-1.5 w-1.5 rounded-full ${
                           isSelected || isPicked
                             ? 'bg-white'
-                            : STATUS_DOT[a.status] || 'bg-sky-400'
+                            : STATUS_DOT[a.status] || 'bg-clinic-400'
                         }`}
                       />
                     ))}
@@ -149,11 +149,11 @@ export default function AppointmentMonthView({ appointments = [], onDateClick, s
 
       {pickedDay && (
         <div className="card">
-          <h3 className="mb-3 font-semibold text-slate-900">
+          <h3 className="mb-3 font-semibold text-clinic-heading">
             {formatDate(pickedKey)}
           </h3>
           {pickedAppts.length === 0 ? (
-            <p className="text-sm text-slate-500">No appointments on this day.</p>
+            <p className="text-sm text-clinic-subtle">No appointments on this day.</p>
           ) : (
             <ul className="space-y-2">
               {pickedAppts.map((a) => (
@@ -164,7 +164,7 @@ export default function AppointmentMonthView({ appointments = [], onDateClick, s
                     </span>
                     <span className="font-medium">{formatTime(a.start_time)}</span>
                   </div>
-                  <p className="mt-1 text-slate-600">
+                  <p className="mt-1 text-clinic-body">
                     {a.procedures?.map((p) => p.name).join(', ')}
                   </p>
                 </li>
@@ -174,11 +174,11 @@ export default function AppointmentMonthView({ appointments = [], onDateClick, s
         </div>
       )}
 
-      <div className="flex flex-wrap gap-3 text-xs text-slate-600">
+      <div className="flex flex-wrap gap-3 text-xs text-clinic-body">
         {[
           ['Confirmed', 'bg-emerald-500'],
           ['Pencil', 'bg-amber-500'],
-          ['Completed', 'bg-sky-600'],
+          ['Completed', 'bg-clinic-500'],
           ['Cancelled', 'bg-slate-400'],
         ].map(([label, color]) => (
           <span key={label} className="flex items-center gap-1.5">

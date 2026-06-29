@@ -9,6 +9,7 @@ import ReceptionistLoginPage from './pages/auth/ReceptionistLoginPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 import HomePage from './pages/public/HomePage';
 import AboutPage from './pages/public/AboutPage';
 import NotFoundPage from './pages/errors/NotFoundPage';
@@ -57,6 +58,7 @@ export default function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
 
       {/* Common typo: /patien/* → /patient/* */}
       <Route path="/patien" element={<PatientTypoRedirect />} />

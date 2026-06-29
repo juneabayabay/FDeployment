@@ -1,5 +1,6 @@
 import PageHeader from '../../components/common/PageHeader';
 import QueryState from '../../components/common/QueryState';
+import BillingBalanceSummary from '../../components/patient/BillingBalanceSummary';
 import BillingCard from '../../components/patient/BillingCard';
 import { CardListSkeleton, TableSkeleton } from '../../components/patient/PatientSkeletons';
 import { useBilling } from '../../hooks/useBilling';
@@ -15,13 +16,7 @@ export default function PatientBillingPage() {
     <div className="space-y-6">
       <PageHeader title="My Billing" subtitle="View your payment records and balances" />
 
-      <div className="patient-hero">
-        <p className="text-sm text-sky-100">Total balance</p>
-        <p className="text-3xl font-bold">{formatPrice(totalBalance)}</p>
-        <p className="mt-1 text-sm text-sky-100">
-          {totalBalance > 0 ? 'Outstanding amount due' : 'All payments up to date'}
-        </p>
-      </div>
+      <BillingBalanceSummary totalBalance={totalBalance} />
 
       <QueryState
         isLoading={billing.isLoading}
@@ -46,33 +41,49 @@ export default function PatientBillingPage() {
           ))}
         </div>
 
-        <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white md:block">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
+        <div className="hidden overflow-x-auto rounded-xl border border-clinic-100 bg-white md:block">
+          <table className="min-w-full divide-y divide-clinic-100 text-sm">
+            <thead className="bg-clinic-50">
               <tr>
                 {['Date', 'Amount', 'Paid', 'Balance', 'Status'].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                  <th key={h} className="text-label px-4 py-3 text-left text-xs uppercase">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {records.map((b) => (
-                <tr key={b.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">
-                    {b.appointment_date ? formatDate(b.appointment_date) : formatDate(b.created_at?.slice(0, 10))}
-                  </td>
-                  <td className="px-4 py-3">{formatPrice(b.total_amount)}</td>
-                  <td className="px-4 py-3">{formatPrice(b.amount_paid)}</td>
-                  <td className="px-4 py-3">{formatPrice(b.balance)}</td>
-                  <td className="px-4 py-3">
-                    <span className={`badge ${getStatusBadgeClass(b.payment_status)}`}>
-                      {b.payment_status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+            <tbody className="divide-y divide-clinic-50">
+              {records.map((b) => {
+                const balance = Number(b.balance);
+                const hasBalance = balance > 0;
+                return (
+                  <tr key={b.id} className="hover:bg-clinic-50/60">
+                    <td className="text-body px-4 py-3">
+                      {b.appointment_date
+                        ? formatDate(b.appointment_date)
+                        : formatDate(b.created_at?.slice(0, 10))}
+                    </td>
+                    <td className="text-body px-4 py-3 font-medium">{formatPrice(b.total_amount)}</td>
+                    <td className="px-4 py-3 font-medium text-emerald-700">
+                      {formatPrice(b.amount_paid)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`font-bold ${
+                          hasBalance ? 'text-amber-700' : 'text-emerald-700'
+                        }`}
+                      >
+                        {formatPrice(b.balance)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`badge ${getStatusBadgeClass(b.payment_status)}`}>
+                        {b.payment_status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

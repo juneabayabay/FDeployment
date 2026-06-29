@@ -70,13 +70,13 @@ export default function RegisterPage() {
       setSuccessToast({
         title: 'Registration Successful',
         message:
-          'Your patient account has been created successfully. Redirecting you to the login page...',
+          'Your account has been created. Check your email to verify your address, then sign in to book appointments.',
       });
 
       setTimeout(() => {
         navigate('/login', {
           replace: true,
-          state: { registrationSuccess: true },
+          state: { registrationSuccess: true, verifyEmail: true },
         });
       }, REDIRECT_DELAY_MS);
     } catch (err) {

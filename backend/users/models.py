@@ -146,16 +146,37 @@ class DentistProfile(models.Model):
 class PatientProfile(models.Model):
     """Demographics and medical history for patient users."""
 
+    class Sex(models.TextChoices):
+        MALE = "male", "Male"
+        FEMALE = "female", "Female"
+        OTHER = "other", "Other"
+        PREFER_NOT_TO_SAY = "prefer_not_to_say", "Prefer not to say"
+
+    class CivilStatus(models.TextChoices):
+        SINGLE = "single", "Single"
+        MARRIED = "married", "Married"
+        WIDOWED = "widowed", "Widowed"
+        SEPARATED = "separated", "Separated"
+        DIVORCED = "divorced", "Divorced"
+        PREFER_NOT_TO_SAY = "prefer_not_to_say", "Prefer not to say"
+
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name="patient_profile",
     )
     date_of_birth = models.DateField(null=True, blank=True)
+    sex = models.CharField(max_length=20, choices=Sex.choices, blank=True)
+    civil_status = models.CharField(max_length=20, choices=CivilStatus.choices, blank=True)
+    address = models.TextField(blank=True)
     medical_history = models.TextField(blank=True)
     allergies = models.TextField(blank=True)
     emergency_contact_name = models.CharField(max_length=150, blank=True)
     emergency_contact_phone = models.CharField(max_length=20, blank=True)
+    is_walk_in_account = models.BooleanField(
+        default=False,
+        help_text="Created by staff at the front desk; no patient portal login.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

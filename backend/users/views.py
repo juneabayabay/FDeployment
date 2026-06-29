@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.contrib.auth.tokens import default_token_generator
+from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, status, viewsets
@@ -14,12 +15,14 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .models import ClinicPermission, Role, RolePermission, User, UserRole
 from .permissions import HasClinicPermission
+from .staff_management import assert_actor_can_manage_target
 from .serializers import (
     ChangePasswordSerializer,
     ClinicPermissionSerializer,
     CustomTokenObtainPairSerializer,
     ForgotPasswordSerializer,
     PublicRegisterSerializer,
+    ResendVerificationSerializer,
     ResetPasswordSerializer,
     RolePermissionSerializer,
     RoleSerializer,
@@ -27,10 +30,13 @@ from .serializers import (
     UserRoleSerializer,
     UserSerializer,
     UserUpdateSerializer,
+    VerifyEmailSerializer,
 )
 from .email_templates import build_password_reset_email
+from .email_verification import send_email_verification
+from .patient_account import patient_must_verify_email
 from .throttles import AuthAnonRateThrottle
-from .email_utils import is_smtp_ready, send_password_reset_email, smtp_setup_hint
+from .email_utils import can_deliver_email, is_smtp_ready, send_password_reset_email, smtp_setup_hint
 from .utils import blacklist_user_tokens
 from .avatar import delete_stored_avatar, validate_avatar_file
 
@@ -45,10 +51,25 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        return Response(
-            UserSerializer(user, context={"request": request}).data,
-            status=status.HTTP_201_CREATED,
-        )
+
+        sent, error = send_email_verification(user)
+        response_data = UserSerializer(user, context={"request": request}).data
+        if sent:
+            response_data["message"] = (
+                "Account created. Please check your email to verify your address before booking."
+            )
+        elif settings.DEBUG and error:
+            response_data["message"] = (
+                "Account created. Email verification could not be sent — "
+                f"check the backend console or configure SMTP. ({error})"
+            )
+        else:
+            response_data["message"] = (
+                "Account created. We could not send a verification email right now — "
+                "use Resend verification after signing in."
+            )
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -179,7 +200,7 @@ class ForgotPasswordView(APIView):
         except User.DoesNotExist:
             return Response(response_data)
 
-        if not is_smtp_ready():
+        if not can_deliver_email():
             detail = (
                 smtp_setup_hint()
                 if settings.DEBUG
@@ -259,6 +280,85 @@ class ResetPasswordView(APIView):
         return Response({"detail": "Password reset successful. You can now log in."})
 
 
+class VerifyEmailView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [AuthAnonRateThrottle]
+
+    def post(self, request):
+        serializer = VerifyEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            uid = force_str(urlsafe_base64_decode(serializer.validated_data["uid"]))
+            user = User.objects.get(pk=uid, deleted_at__isnull=True, is_active=True)
+        except (User.DoesNotExist, ValueError, TypeError, OverflowError):
+            return Response(
+                {"detail": "Invalid verification link."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        token = serializer.validated_data["token"]
+        if not default_token_generator.check_token(user, token):
+            return Response(
+                {"detail": "Invalid or expired verification link."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if user.email_verified_at:
+            return Response({"detail": "Email is already verified."})
+
+        user.email_verified_at = timezone.now()
+        user.save(update_fields=["email_verified_at", "updated_at"])
+        return Response({"detail": "Email verified successfully. You can now book appointments."})
+
+
+class ResendVerificationView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = [AuthAnonRateThrottle]
+
+    def post(self, request):
+        serializer = ResendVerificationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        response_data = {
+            "detail": (
+                "If an account exists and still needs verification, a new email has been sent."
+            ),
+        }
+
+        if request.user.is_authenticated:
+            user = request.user
+        else:
+            email = (serializer.validated_data.get("email") or "").strip()
+            if not email:
+                return Response(
+                    {"email": ["Email is required when not signed in."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            user = User.objects.filter(
+                email__iexact=email, deleted_at__isnull=True, is_active=True
+            ).first()
+            if not user:
+                return Response(response_data)
+
+        if not patient_must_verify_email(user):
+            return Response(response_data)
+
+        sent, error = send_email_verification(user)
+        if not sent:
+            detail = (
+                f"Unable to send verification email: {error}"
+                if settings.DEBUG and error
+                else "Unable to send verification email right now. Please try again later."
+            )
+            return Response(
+                {"detail": detail, "code": "smtp_send_failed"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        return Response(response_data)
+
+
 class TestEmailView(APIView):
     """DEBUG-only SMTP test for admins. POST { \"email\": \"optional@recipient.com\" }"""
 
@@ -269,7 +369,7 @@ class TestEmailView(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if not request.user.is_superuser:
             return Response(status=status.HTTP_403_FORBIDDEN)
-        if not is_smtp_ready():
+        if not can_deliver_email():
             return Response({"detail": smtp_setup_hint()}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         from .email_utils import send_clinic_email
@@ -337,13 +437,22 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserUpdateSerializer
         return UserSerializer
 
+    def _guard_staff_management(self, target):
+        assert_actor_can_manage_target(self.request.user, target)
+
+    def perform_update(self, serializer):
+        self._guard_staff_management(serializer.instance)
+        serializer.save()
+
     def perform_destroy(self, instance):
+        self._guard_staff_management(instance)
         instance.soft_delete()
         blacklist_user_tokens(instance)
 
     @action(detail=True, methods=["post"], url_path="reset-password")
     def reset_password(self, request, pk=None):
         user = self.get_object()
+        self._guard_staff_management(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
         frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")

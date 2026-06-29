@@ -8,9 +8,7 @@ import AppErrorBoundary from './components/common/AppErrorBoundary';
 import './index.css';
 import './styles/public-pages.css';
 import './styles/patient-auth.css';
-import './styles/admin-auth.css';
-import './styles/receptionist-auth.css';
-import './styles/dentist-auth.css';
+import './styles/staff-auth.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {

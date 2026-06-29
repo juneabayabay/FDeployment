@@ -68,8 +68,8 @@ export default function RoleLoginForm({
 
   return (
     <div className="card w-full max-w-md">
-      <p className="text-sm font-medium text-sky-600">{subtitle}</p>
-      <h1 className="mt-1 text-2xl font-bold text-slate-900">{title}</h1>
+      <p className="text-sm font-medium text-clinic-500">{subtitle}</p>
+      <h1 className="mt-1 text-2xl font-bold text-clinic-heading">{title}</h1>
       <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
         <ErrorMessage message={error} />
         <label className="label">
@@ -97,15 +97,15 @@ export default function RoleLoginForm({
         </button>
         {forgotPasswordLink && (
           <p className="text-center text-sm">
-            <Link to={forgotPasswordLink} className="text-sky-600 hover:text-sky-800">
+            <Link to={forgotPasswordLink} className="text-clinic-500 hover:text-clinic-700">
               Forgot password?
             </Link>
           </p>
         )}
         {registerLink && (
-          <p className="text-center text-sm text-slate-600">
+          <p className="text-center text-sm text-clinic-body">
             No account?{' '}
-            <Link to={registerLink} className="text-sky-600 hover:text-sky-800">
+            <Link to={registerLink} className="text-clinic-500 hover:text-clinic-700">
               Register as patient
             </Link>
           </p>

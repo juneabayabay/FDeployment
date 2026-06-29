@@ -19,6 +19,7 @@ class AppointmentDentistFKTestCase(APITestCase):
             password="TestPass123!",
             first_name="Pat",
             last_name="Ient",
+            email_verified_at=timezone.now(),
         )
         UserRole.objects.create(user=cls.patient, role=Role.objects.get(slug=Role.USER))
 

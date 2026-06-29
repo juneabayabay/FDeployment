@@ -22,7 +22,7 @@ export default function TimeSlotPicker({
 
   if (!totalDurationMinutes) {
     return (
-      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
+      <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-clinic-subtle">
         Select a procedure above — compatible times will appear here automatically.
       </div>
     );
@@ -30,7 +30,7 @@ export default function TimeSlotPicker({
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+      <div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-clinic-subtle">
         Finding compatible times for your {durationLabel} appointment…
       </div>
     );
@@ -39,7 +39,7 @@ export default function TimeSlotPicker({
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="min-w-0 text-sm text-slate-600">
+        <p className="min-w-0 text-sm text-clinic-body">
           Auto-matched · {durationLabel} · {pencilHours}hr pencil booking
         </p>
         <button type="button" className="btn-ghost btn-sm shrink-0 self-start sm:self-auto" onClick={onRefresh}>
@@ -48,7 +48,7 @@ export default function TimeSlotPicker({
       </div>
 
       {slotsMessage && (
-        <p className={`rounded-lg px-4 py-2 text-sm ${dailyFull ? 'bg-amber-50 text-amber-800' : 'bg-sky-50 text-sky-800'}`}>
+        <p className={`rounded-lg px-4 py-2 text-sm ${dailyFull ? 'bg-amber-50 text-amber-800' : 'bg-clinic-50 text-clinic-700'}`}>
           {slotsMessage}
         </p>
       )}
@@ -61,12 +61,12 @@ export default function TimeSlotPicker({
               className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div>
-                <h3 className="font-semibold text-slate-900">
+                <h3 className="font-semibold text-clinic-heading">
                   {formatTime(slot.start_time)} – {formatTime(slot.end_time)}{' '}
-                  <span className="font-normal text-slate-500">({formatDurationShort(totalDurationMinutes)})</span>
+                  <span className="font-normal text-clinic-subtle">({formatDurationShort(totalDurationMinutes)})</span>
                 </h3>
-                <p className="mt-1 text-sm text-slate-600">{procedureLabel}</p>
-                <p className="text-sm font-medium text-slate-800">Total: {formatPrice(totalAmount)}</p>
+                <p className="mt-1 text-sm text-clinic-body">{procedureLabel}</p>
+                <p className="text-sm font-medium text-clinic-heading">Total: {formatPrice(totalAmount)}</p>
                 <span className="badge mt-2 bg-emerald-100 text-emerald-800">Compatible · Available</span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -106,7 +106,7 @@ export default function TimeSlotPicker({
       )}
 
       {slots.length === 0 && !slotsMessage && selectedDate && (
-        <p className="text-sm text-slate-500">No compatible times on this date. Try another day.</p>
+        <p className="text-sm text-clinic-subtle">No compatible times on this date. Try another day.</p>
       )}
     </div>
   );

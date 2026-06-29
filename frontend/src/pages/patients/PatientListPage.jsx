@@ -17,6 +17,8 @@ import { useStaffPaths } from '../../hooks/useStaffPaths';
 import { parseApiError } from '../../utils/formatters';
 import Avatar from '../../components/common/Avatar';
 import { ROLES } from '../../utils/constants';
+import WalkInPatientForm from '../../components/staff/WalkInPatientForm';
+import { formatPatientEmail, isWalkInAccount } from '../../utils/patientAccount';
 
 const emptyForm = {
   email: '',
@@ -31,6 +33,7 @@ const emptyForm = {
 export default function PatientListPage() {
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [showWalkInForm, setShowWalkInForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -87,10 +90,17 @@ export default function PatientListPage() {
             size="sm"
           />
           <span>{row.full_name || `${row.first_name} ${row.last_name}`.trim() || '—'}</span>
+          {isWalkInAccount(row) && (
+            <span className="badge bg-amber-100 text-amber-800">Walk-in account</span>
+          )}
         </div>
       ),
     },
-    { key: 'email', label: 'Email' },
+    {
+      key: 'email',
+      label: 'Email',
+      render: (row) => formatPatientEmail(row),
+    },
     { key: 'phone', label: 'Phone', render: (row) => row.phone || '—' },
     {
       key: 'status',
@@ -106,7 +116,7 @@ export default function PatientListPage() {
       label: '',
       render: (row) => (
         <div className="flex gap-3">
-          <Link to={path(`/patients/${row.id}`)} className="text-sm text-sky-600 hover:text-sky-800">
+          <Link to={path(`/patients/${row.id}`)} className="text-sm text-clinic-500 hover:text-clinic-700">
             View
           </Link>
           {can('patients.delete') && (
@@ -131,9 +141,28 @@ export default function PatientListPage() {
         subtitle="Search patient records"
         actions={
           can('patients.create') ? (
-            <button type="button" className="btn-primary btn-sm" onClick={() => setShowForm((v) => !v)}>
-              {showForm ? 'Close form' : '+ Register patient'}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn-outline btn-sm"
+                onClick={() => {
+                  setShowWalkInForm((v) => !v);
+                  setShowForm(false);
+                }}
+              >
+                {showWalkInForm ? 'Close walk-in form' : '+ Walk-in patient'}
+              </button>
+              <button
+                type="button"
+                className="btn-primary btn-sm"
+                onClick={() => {
+                  setShowForm((v) => !v);
+                  setShowWalkInForm(false);
+                }}
+              >
+                {showForm ? 'Close form' : '+ Register patient'}
+              </button>
+            </div>
           ) : null
         }
       />
@@ -141,9 +170,19 @@ export default function PatientListPage() {
       {message && <AlertBanner message={message} onDismiss={() => setMessage('')} />}
       <ErrorMessage message={error} />
 
+      {showWalkInForm && can('patients.create') && (
+        <WalkInPatientForm
+          onSuccess={() => {
+            setMessage('Walk-in patient registered successfully.');
+            setShowWalkInForm(false);
+          }}
+          onCancel={() => setShowWalkInForm(false)}
+        />
+      )}
+
       {showForm && can('patients.create') && (
         <form onSubmit={handleCreate} className="card grid gap-4 sm:grid-cols-2">
-          <h2 className="sm:col-span-2 text-lg font-semibold text-slate-900">Register new patient</h2>
+          <h2 className="sm:col-span-2 text-lg font-semibold text-clinic-heading">Register new patient</h2>
           {['first_name', 'last_name', 'email', 'phone'].map((field) => (
             <label key={field} className="label capitalize">
               {field.replace('_', ' ')}

@@ -1,12 +1,13 @@
 from datetime import date
 
+from django.db import transaction
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from notifications.services import notify_appointment_cancelled, notify_waiting_list_for_freed_slot
-from users.permissions import IsPatientUser
+from users.permissions import IsPatientUser, IsPatientUserOrClinicStaff
 
 from .clinic_config import get_clinic_info
 from .models import Appointment, Procedure, ProcedurePackage, WaitingListEntry
@@ -33,26 +34,26 @@ def _appointment_queryset():
 class ProcedureListView(generics.ListAPIView):
     queryset = Procedure.objects.filter(is_active=True)
     serializer_class = ProcedureSerializer
-    permission_classes = [IsAuthenticated, IsPatientUser]
+    permission_classes = [IsAuthenticated, IsPatientUserOrClinicStaff]
     pagination_class = None
 
 
 class ProcedurePackageListView(generics.ListAPIView):
     queryset = ProcedurePackage.objects.filter(is_active=True).prefetch_related("procedures")
     serializer_class = ProcedurePackageSerializer
-    permission_classes = [IsAuthenticated, IsPatientUser]
+    permission_classes = [IsAuthenticated, IsPatientUserOrClinicStaff]
     pagination_class = None
 
 
 class ClinicInfoView(APIView):
-    permission_classes = [IsAuthenticated, IsPatientUser]
+    permission_classes = [IsAuthenticated, IsPatientUserOrClinicStaff]
 
     def get(self, request):
         return Response(get_clinic_info())
 
 
 class AvailableSlotsView(APIView):
-    permission_classes = [IsAuthenticated, IsPatientUser]
+    permission_classes = [IsAuthenticated, IsPatientUserOrClinicStaff]
 
     def get(self, request):
         serializer = AvailableSlotsSerializer(data=request.query_params)
@@ -67,7 +68,7 @@ class AvailableSlotsView(APIView):
 class CompatibleSlotsView(APIView):
     """Return time slots automatically matched to selected procedure duration."""
 
-    permission_classes = [IsAuthenticated, IsPatientUser]
+    permission_classes = [IsAuthenticated, IsPatientUserOrClinicStaff]
 
     def get(self, request):
         package_id = request.query_params.get("package_id")
@@ -173,21 +174,23 @@ class AppointmentCancelView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        fee = calculate_cancellation_fee(appointment)
-        appointment.status = Appointment.Status.CANCELLED
-        appointment.cancellation_fee = fee
-        appointment.save(update_fields=["status", "cancellation_fee", "updated_at"])
+        with transaction.atomic():
+            fee = calculate_cancellation_fee(appointment)
+            appointment.status = Appointment.Status.CANCELLED
+            appointment.cancellation_fee = fee
+            appointment.save(update_fields=["status", "cancellation_fee", "updated_at"])
 
-        from billing.services import post_cancellation_fee
+            from billing.services import post_cancellation_fee
 
-        post_cancellation_fee(appointment)
+            post_cancellation_fee(appointment)
 
-        notify_appointment_cancelled(appointment, fee)
-        procedure_ids = list(appointment.procedures.values_list("id", flat=True))
-        notify_waiting_list_for_freed_slot(appointment.appointment_date, procedure_ids)
-        return Response(
-            AppointmentSerializer(appointment, context={"request": request}).data
-        )
+            notify_appointment_cancelled(appointment, fee)
+            procedure_ids = list(appointment.procedures.values_list("id", flat=True))
+            notify_waiting_list_for_freed_slot(appointment.appointment_date, procedure_ids)
+
+        data = AppointmentSerializer(appointment, context={"request": request}).data
+        data["message"] = "Appointment cancelled successfully."
+        return Response(data)
 
 
 class AppointmentRescheduleView(APIView):

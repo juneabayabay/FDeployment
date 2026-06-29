@@ -13,12 +13,12 @@ function Participant({ label, person, role }) {
   const user = participantUser(person, role);
   if (!user) {
     return (
-      <div className="flex items-center gap-2 text-sm text-slate-400">
+      <div className="flex items-center gap-2 text-sm text-clinic-muted">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs">
           —
         </div>
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-clinic-muted">{label}</p>
           <p>Not assigned</p>
         </div>
       </div>
@@ -29,8 +29,8 @@ function Participant({ label, person, role }) {
     <div className="flex items-center gap-2">
       <Avatar user={user} size="sm" />
       <div className="min-w-0">
-        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>
-        <p className="truncate text-sm font-medium text-slate-800">{user.full_name || user.email}</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-clinic-muted">{label}</p>
+        <p className="truncate text-sm font-medium text-clinic-heading">{user.full_name || user.email}</p>
       </div>
     </div>
   );
@@ -47,13 +47,13 @@ export default function AppointmentParticipants({
     return (
       <div className="flex flex-wrap items-center gap-3">
         {showDentist && dentist && (
-          <div className="flex items-center gap-2 text-sm text-slate-600">
+          <div className="flex items-center gap-2 text-sm text-clinic-body">
             <Avatar user={participantUser(dentist, ROLES.DENTIST)} size="sm" />
             <span>{dentist.full_name}</span>
           </div>
         )}
         {showPatient && patient && (
-          <div className="flex items-center gap-2 text-sm text-slate-600">
+          <div className="flex items-center gap-2 text-sm text-clinic-body">
             <Avatar user={participantUser(patient, ROLES.USER)} size="sm" />
             <span>{patient.full_name}</span>
           </div>

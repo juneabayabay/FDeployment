@@ -23,11 +23,11 @@ export default function PermissionListPage() {
         <div className="space-y-6">
           {Object.entries(grouped).map(([module, perms]) => (
             <section key={module} className="card">
-              <h3 className="mb-4 text-lg font-semibold capitalize text-slate-900">{module}</h3>
+              <h3 className="mb-4 text-lg font-semibold capitalize text-clinic-heading">{module}</h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 text-left text-xs uppercase text-slate-500">
+                    <tr className="border-b border-slate-200 text-left text-xs uppercase text-clinic-subtle">
                       <th className="pb-2 pr-4">Codename</th>
                       <th className="pb-2 pr-4">Name</th>
                       <th className="pb-2">Action</th>
@@ -36,9 +36,9 @@ export default function PermissionListPage() {
                   <tbody className="divide-y divide-slate-100">
                     {perms.map((p) => (
                       <tr key={p.id}>
-                        <td className="py-2 pr-4 font-mono text-sky-700">{p.codename}</td>
+                        <td className="py-2 pr-4 font-mono text-clinic-700">{p.codename}</td>
                         <td className="py-2 pr-4">{p.name}</td>
-                        <td className="py-2 capitalize text-slate-500">{p.action}</td>
+                        <td className="py-2 capitalize text-clinic-subtle">{p.action}</td>
                       </tr>
                     ))}
                   </tbody>

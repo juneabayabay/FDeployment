@@ -25,8 +25,8 @@ export default function QuickActionGrid({ actions }) {
         const Icon = ICONS[action.icon] || FiHome;
         return (
           <Link key={action.path} to={action.path} className="quick-action">
-            <Icon className="h-6 w-6 text-sky-600" />
-            <span className="text-sm font-medium text-slate-800">{action.label}</span>
+            <Icon className="h-6 w-6 text-clinic-500" />
+            <span className="text-sm font-medium text-clinic-heading">{action.label}</span>
           </Link>
         );
       })}

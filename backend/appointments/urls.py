@@ -18,6 +18,7 @@ from .views_staff import (
     StaffAppointmentDetailView,
     StaffAppointmentListCreateView,
     StaffAppointmentRescheduleView,
+    StaffAvailableSlotsView,
     StaffNextAvailableSlotView,
     StaffScheduleView,
     StaffWaitingListBookView,
@@ -35,6 +36,7 @@ urlpatterns = [
     path("slots/compatible/", CompatibleSlotsView.as_view(), name="slots-compatible"),
     # Staff routes (must precede <int:pk>/ patterns)
     path("staff/schedule/", StaffScheduleView.as_view(), name="staff-schedule"),
+    path("staff/slots/", StaffAvailableSlotsView.as_view(), name="staff-slots"),
     path(
         "staff/next-available-slot/",
         StaffNextAvailableSlotView.as_view(),

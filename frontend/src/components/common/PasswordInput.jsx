@@ -40,7 +40,7 @@ export default function PasswordInput({
 
   const toggleClass = themed
     ? themed.toggle
-    : 'absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 hover:text-slate-700 disabled:opacity-50';
+    : 'absolute inset-y-0 right-0 flex items-center px-3 text-clinic-subtle hover:text-clinic-body disabled:opacity-50';
 
   return (
     <div className="relative">

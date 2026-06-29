@@ -28,4 +28,8 @@ export const authService = {
   forgotPassword: (email) => httpClient.post('/users/password/forgot/', { email }),
 
   resetPassword: (data) => httpClient.post('/users/password/reset/', data),
+
+  verifyEmail: (data) => httpClient.post('/users/verify-email/', data),
+
+  resendVerification: (data = {}) => httpClient.post('/users/resend-verification/', data),
 };

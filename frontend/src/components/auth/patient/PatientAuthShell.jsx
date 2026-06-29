@@ -1,4 +1,3 @@
-import PublicBubbles from '../../public/PublicBubbles';
 import PatientAuthBrand from './PatientAuthBrand';
 
 export default function PatientAuthShell({ children, wide = false }) {
@@ -13,7 +12,6 @@ export default function PatientAuthShell({ children, wide = false }) {
 
   return (
     <div className="public-page patient-auth-page">
-      <PublicBubbles />
       <div className={cardClass}>
         <PatientAuthBrand />
         {children}

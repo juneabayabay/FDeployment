@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from notifications.services import notify_appointment_confirmed
 
-from users.models import User
+from users.models import Role, User
 
 from .models import Appointment, WaitingListEntry
 from .serializers import (
@@ -13,6 +13,7 @@ from .serializers import (
     WaitingListSerializer,
     _validate_dentist_user,
 )
+from .services import COMPLETABLE_STATUSES, can_complete_appointment
 
 
 class PatientSummarySerializer(AppointmentUserSummarySerializer):
@@ -31,16 +32,34 @@ class PatientSummarySerializer(AppointmentUserSummarySerializer):
 
 class StaffAppointmentSerializer(AppointmentSerializer):
     patient = PatientSummarySerializer(read_only=True)
+    can_complete = serializers.SerializerMethodField()
 
     class Meta(AppointmentSerializer.Meta):
         fields = [
             *AppointmentSerializer.Meta.fields,
             "patient",
+            "can_complete",
         ]
         read_only_fields = [
             *AppointmentSerializer.Meta.read_only_fields,
             "patient",
+            "can_complete",
         ]
+
+    def get_can_complete(self, obj):
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        is_admin = (
+            user
+            and user.is_authenticated
+            and (
+                user.is_superuser
+                or user.user_roles.filter(role__slug=Role.ADMIN).exists()
+            )
+        )
+        if is_admin:
+            return obj.status in COMPLETABLE_STATUSES
+        return can_complete_appointment(obj)
 
 
 class StaffAppointmentCreateSerializer(AppointmentCreateSerializer):
@@ -85,6 +104,21 @@ class StaffAppointmentUpdateSerializer(serializers.ModelSerializer):
         allowed = {choice[0] for choice in Appointment.Status.choices}
         if value not in allowed:
             raise serializers.ValidationError("Invalid status.")
+        if value == Appointment.Status.COMPLETED:
+            request = self.context.get("request")
+            user = getattr(request, "user", None)
+            is_admin = (
+                user
+                and user.is_authenticated
+                and (
+                    user.is_superuser
+                    or user.user_roles.filter(role__slug=Role.ADMIN).exists()
+                )
+            )
+            if not is_admin and not can_complete_appointment(self.instance):
+                raise serializers.ValidationError(
+                    "Appointment can only be marked complete during the scheduled time."
+                )
         return value
 
     def update(self, instance, validated_data):

@@ -39,27 +39,27 @@ export default function StaffDashboardPage() {
       {can('appointments.view') && (
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="card">
-            <p className="text-sm text-slate-500">Today&apos;s appointments</p>
+            <p className="text-sm text-clinic-subtle">Today&apos;s appointments</p>
             <QueryState isLoading={schedule.isLoading} skeleton={<div className="mt-2 h-8 w-12 animate-pulse rounded bg-slate-200" />}>
-              <p className="mt-1 text-3xl font-bold text-sky-700">{todayCount}</p>
+              <p className="mt-1 text-3xl font-bold text-clinic-700">{todayCount}</p>
             </QueryState>
-            <Link to={path('/schedule')} className="mt-2 inline-block text-sm text-sky-600 hover:text-sky-800">
+            <Link to={path('/schedule')} className="mt-2 inline-block text-sm text-clinic-500 hover:text-clinic-700">
               View schedule →
             </Link>
           </div>
           <div className="card">
-            <p className="text-sm text-slate-500">Waiting list</p>
+            <p className="text-sm text-clinic-subtle">Waiting list</p>
             <QueryState isLoading={waitingList.isLoading} skeleton={<div className="mt-2 h-8 w-12 animate-pulse rounded bg-slate-200" />}>
               <p className="mt-1 text-3xl font-bold text-amber-600">{waitingCount}</p>
             </QueryState>
-            <Link to={path('/waiting-list')} className="mt-2 inline-block text-sm text-sky-600 hover:text-sky-800">
+            <Link to={path('/waiting-list')} className="mt-2 inline-block text-sm text-clinic-500 hover:text-clinic-700">
               Manage waiting list →
             </Link>
           </div>
           {can('appointments.create') && (
             <Link to={path('/appointments/book')} className="card transition-shadow hover:shadow-md">
-              <p className="font-semibold text-slate-900">Book appointment</p>
-              <p className="mt-1 text-sm text-sky-600">Schedule for a patient →</p>
+              <p className="font-semibold text-clinic-heading">Book appointment</p>
+              <p className="mt-1 text-sm text-clinic-500">Schedule for a patient →</p>
             </Link>
           )}
         </div>
@@ -72,8 +72,8 @@ export default function StaffDashboardPage() {
             to={path(item.path)}
             className="card transition-shadow hover:shadow-md"
           >
-            <h3 className="font-semibold text-slate-900">{item.label}</h3>
-            <p className="mt-1 text-sm text-sky-600">Open →</p>
+            <h3 className="font-semibold text-clinic-heading">{item.label}</h3>
+            <p className="mt-1 text-sm text-clinic-500">Open →</p>
           </Link>
         ))}
       </div>

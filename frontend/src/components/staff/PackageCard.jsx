@@ -3,12 +3,12 @@ import { formatDuration, formatPrice } from '../../utils/formatters';
 export default function PackageCard({ package: pkg, canManage, onEdit, onDeactivate }) {
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="font-semibold text-slate-900">{pkg.name}</p>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="font-semibold text-clinic-heading">{pkg.name}</p>
+      <p className="mt-1 text-sm text-clinic-subtle">
         {formatDuration(pkg.total_duration_minutes)} · {formatPrice(pkg.package_price)}
       </p>
-      {pkg.description && <p className="mt-2 text-sm text-slate-600">{pkg.description}</p>}
-      <p className="mt-2 text-xs text-slate-500">
+      {pkg.description && <p className="mt-2 text-sm text-clinic-body">{pkg.description}</p>}
+      <p className="mt-2 text-xs text-clinic-subtle">
         Includes: {(pkg.procedures || []).map((p) => p.name).join(', ') || '—'}
       </p>
       {canManage && (

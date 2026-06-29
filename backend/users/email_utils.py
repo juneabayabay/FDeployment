@@ -37,14 +37,26 @@ def is_smtp_ready():
     return bool(host and user and password)
 
 
+def can_deliver_email():
+    """True when Gmail SMTP is configured, or DEBUG + console backend (local dev)."""
+    return is_smtp_ready() or (settings.DEBUG and is_console_email_backend())
+
+
 def smtp_setup_hint():
-    return (
+    base = (
         "Gmail is not configured. In backend/.env set EMAIL_HOST_USER=your@gmail.com, "
         "EMAIL_HOST_PASSWORD=your-16-char-app-password, EMAIL_HOST=smtp.gmail.com, "
         "and EMAIL_USE_TLS=True. Create an App Password at "
         "https://myaccount.google.com/apppasswords (2-Step Verification required). "
         "Restart the backend, then run: python manage.py check_email your@gmail.com"
     )
+    if settings.DEBUG:
+        return (
+            f"{base} "
+            "For local dev without Gmail, set EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend "
+            "in backend/.env — verification links will print in this terminal."
+        )
+    return base
 
 
 def get_email_connection():
@@ -62,13 +74,16 @@ def get_email_connection():
 
 
 def send_clinic_email(*, subject, text_body, html_body=None, recipient):
-    """Send a clinic email via Gmail SMTP. Returns (success, error_message)."""
-    if not is_smtp_ready():
+    """Send a clinic email. Uses Gmail SMTP or console backend in DEBUG."""
+    if not can_deliver_email():
         return False, smtp_setup_hint()
 
     try:
-        connection = get_email_connection()
         from_email = get_from_email()
+        if is_smtp_ready():
+            connection = get_email_connection()
+        else:
+            connection = get_connection()
 
         if html_body:
             message = EmailMultiAlternatives(
@@ -95,6 +110,11 @@ def send_clinic_email(*, subject, text_body, html_body=None, recipient):
         if sent < 1:
             logger.error("Clinic email not sent to %s", recipient)
             return False, "Email backend returned no sent messages."
+        if not is_smtp_ready():
+            logger.info(
+                "Dev console email for %s — open the runserver terminal to copy the verification link.",
+                recipient,
+            )
         return True, None
     except Exception as exc:
         logger.exception("Failed to send clinic email to %s", recipient)

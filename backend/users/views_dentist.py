@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .dentist_directory import set_clinic_dentist
 from .models import DentistProfile, Role
 from .permissions import HasClinicPermission
 from .serializers_dentist import (
@@ -105,7 +106,8 @@ class DentistProfileViewSet(viewsets.ModelViewSet):
         user = serializer.validated_data["user"]
         if DentistProfile.objects.filter(user=user).exists():
             raise ValidationError({"user_id": "This dentist already has a profile."})
-        serializer.save()
+        profile = serializer.save()
+        set_clinic_dentist(profile)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)

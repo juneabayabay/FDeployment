@@ -94,7 +94,13 @@ export function useCancelAppointment() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id) => appointmentsService.cancel(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['staff-appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['staff-schedule'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.billing });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.notifications });
+    },
   });
 }
 

@@ -2,7 +2,7 @@ import { formatDateTime } from '../../utils/formatters';
 
 export default function NotificationList({ notifications, onMarkRead, onMarkAllRead, marking }) {
   if (!notifications.length) {
-    return <p className="text-sm text-slate-500">No notifications yet.</p>;
+    return <p className="text-sm text-clinic-subtle">No notifications yet.</p>;
   }
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
@@ -19,14 +19,14 @@ export default function NotificationList({ notifications, onMarkRead, onMarkAllR
           <li
             key={n.id}
             className={`rounded-xl border p-4 ${
-              n.is_read ? 'border-slate-100 bg-white' : 'border-sky-200 bg-sky-50'
+              n.is_read ? 'border-slate-100 bg-white' : 'border-clinic-200 bg-clinic-50'
             }`}
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <strong className="text-slate-900">{n.title}</strong>
-                <p className="mt-1 text-sm text-slate-600">{n.message}</p>
-                <small className="mt-2 block text-xs text-slate-400">{formatDateTime(n.created_at)}</small>
+                <strong className="text-clinic-heading">{n.title}</strong>
+                <p className="mt-1 text-sm text-clinic-body">{n.message}</p>
+                <small className="mt-2 block text-xs text-clinic-muted">{formatDateTime(n.created_at)}</small>
               </div>
               {!n.is_read && (
                 <button
