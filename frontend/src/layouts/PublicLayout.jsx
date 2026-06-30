@@ -1,16 +1,15 @@
 import { Outlet } from 'react-router-dom';
+import PublicBackground from '../components/public/PublicBackground';
 import PublicFooter from '../components/public/PublicFooter';
 import PublicHeader from '../components/public/PublicHeader';
-import PublicMainCard from '../components/public/PublicMainCard';
 
 export default function PublicLayout() {
   return (
-    <div className="public-page">
-      <PublicMainCard>
-        <PublicHeader />
-        <Outlet />
-        <PublicFooter />
-      </PublicMainCard>
+    <div className="public-site">
+      <PublicBackground />
+      <PublicHeader />
+      <Outlet />
+      <PublicFooter />
     </div>
   );
 }

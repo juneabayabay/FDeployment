@@ -1,14 +1,20 @@
-import { FaCheck, FaInfoCircle } from 'react-icons/fa';
-import { CLINIC_HOURS, DENTAL_SERVICES } from '../../config/publicContent';
+import { FaCheck, FaBookOpen, FaInfoCircle } from 'react-icons/fa';
+import {
+  CLINIC_HOURS,
+  CLINIC_MISSION,
+  CLINIC_STORY,
+  CLINIC_VISION,
+  DENTAL_SERVICES,
+} from '../../config/publicContent';
 
 export default function AboutPage() {
   return (
-    <div className="public-inner-page">
+    <main className="public-container public-inner-page">
       <header className="public-page-header">
         <h1>
           About <span>Barnabas Dental</span>
         </h1>
-        <p>Our mission, vision, and the services we offer</p>
+        <p>Our story, mission, vision, and the services we offer</p>
       </header>
 
       <div className="public-grid-2">
@@ -18,10 +24,7 @@ export default function AboutPage() {
             Our mission
           </div>
           <div className="public-prose">
-            <p>
-              To provide compassionate, high-quality dental care that helps every patient achieve
-              a healthy, confident smile — delivered with professionalism and respect.
-            </p>
+            <p>{CLINIC_MISSION}</p>
           </div>
         </section>
 
@@ -31,34 +34,28 @@ export default function AboutPage() {
             Our vision
           </div>
           <div className="public-prose">
-            <p>
-              To be the trusted neighborhood dental clinic where families feel welcome, informed,
-              and well cared for — combining modern dentistry with convenient digital services.
-            </p>
+            <p>{CLINIC_VISION}</p>
           </div>
         </section>
       </div>
 
       <section className="public-card" style={{ marginBottom: '2rem' }}>
         <div className="public-card-title">
-          <FaInfoCircle aria-hidden />
-          Background
+          <FaBookOpen aria-hidden />
+          Our story
         </div>
         <div className="public-prose">
+          {CLINIC_STORY.map((paragraph, index) => (
+            <p key={index}>{paragraph}</p>
+          ))}
           <p>
-            Barnabas Dental Clinic has served our community with general and specialized dental
-            services for years. Our team of experienced dentists and staff are committed to patient
-            comfort, clear communication, and evidence-based treatment. With our online patient
-            portal, you can register, book appointments, and manage your dental care from anywhere.
-          </p>
-          <p>
-            Clinic hours: {CLINIC_HOURS.days}, {CLINIC_HOURS.open} – {CLINIC_HOURS.close} (lunch{' '}
-            {CLINIC_HOURS.lunch})
+            <strong>Clinic hours:</strong> {CLINIC_HOURS.days}, {CLINIC_HOURS.open} –{' '}
+            {CLINIC_HOURS.close} (lunch {CLINIC_HOURS.lunch})
           </p>
         </div>
       </section>
 
-      <section className="public-card">
+      <section className="public-card" id="services">
         <div className="public-card-title">
           <FaInfoCircle aria-hidden />
           Dental services
@@ -75,6 +72,6 @@ export default function AboutPage() {
           ))}
         </ul>
       </section>
-    </div>
+    </main>
   );
 }
